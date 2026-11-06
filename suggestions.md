@@ -34,3 +34,33 @@ The goal is to improve reusability and reliability without committing to a speci
 ## Highest-value improvement
 
 Turn the current “Ask Claude” test box into a polished, generic **input → processing → result** framework that can be adapted to almost any challenge within an hour.
+
+## Additional challenge-independent preparation
+
+- **Create a challenge-day checklist**
+  - Include clone, install, environment setup, deploy, smoke test, and rollback steps.
+
+- **Add demo resilience**
+  - Prepare sample prompts or data, graceful provider errors, and a fallback mock response if an API is unavailable.
+
+- **Set usage limits**
+  - Cap prompt size and add basic rate limiting so accidental requests do not exhaust API credits.
+
+- **Prepare observability**
+  - Add clear server logs for request failures and response timing without logging secrets or private user data.
+
+- **Add a small test suite**
+  - Cover auth protection, malformed API requests, and successful Claude responses.
+
+- **Establish Git discipline**
+  - Use short-lived branches or clearly assigned files, push frequently, and assign one person responsibility for production deployment.
+
+## Complete after the challenge is announced
+
+- **Prepare presentation assets**
+  - Create an architecture diagram and a concise explanation of the final user flow through Next.js, Supabase, and the AI services.
+
+- **Customize the demo workflow**
+  - Adapt the generic input-to-result framework to the selected challenge, including its prompts, data, output types, and branding.
+
+The highest-value resilience improvement is a **mock/fallback mode**. It lets the team continue building and demoing the workflow even if Anthropic, ElevenLabs, Supabase, or deployment services have problems.
