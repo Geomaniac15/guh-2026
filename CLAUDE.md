@@ -33,6 +33,7 @@ proxy.ts              session refresh + protects /dashboard
 - Cache Components is on: any server component that reads cookies, auth or per-user data must be wrapped in `<Suspense>` (see `app/dashboard/page.tsx`), or the build fails
 - Use TypeScript types, but `any` is acceptable if it unblocks us quickly
 - Every page must handle loading and error states so the demo never shows a blank screen
+- Every new Supabase table has RLS enabled. When you create a table, also write its RLS policies (usually: users can select/insert/update/delete rows where user_id = auth.uid()). If a query returns empty unexpectedly, check RLS policies first
 
 ## Secrets
 - API keys are only ever read from `process.env` on the server
