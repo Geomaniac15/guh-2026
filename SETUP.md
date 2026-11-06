@@ -1,43 +1,38 @@
-# GUH 2026 setup checklist
+# GUH 2026 setup (teammates)
 
-Goal for tonight: an empty app that is live on a public URL, with login working and every API key tested. Then Saturday is just building features.
+The repo, Supabase, Vercel and API keys are already set up. You just need to get it running on your laptop. Takes about 15 minutes.
 
-## 1. Everyone (10 min)
-- [ ] GitHub account, and send your username to the repo owner
-- [ ] Install Node.js LTS (https://nodejs.org) and Git
-- [ ] Install your AI tool: Claude Code (`npm install -g @anthropic-ai/claude-code`) or Cursor
-- [ ] Sign up for the GitHub Student Developer Pack if you haven't (free credits for loads of tools)
+Live site: see the group chat. Every push to `main` updates it automatically in about a minute.
 
-## 2. Repo owner only (10 min)
-The repo is already built (guh-2026.zip). Login, a protected dashboard and a Claude test endpoint are wired up.
-- [ ] Unzip it, then in the folder:
-  ```
-  npm install
-  git init -b main
-  git add . && git commit -m 'boilerplate'
-  ```
-- [ ] Create an empty GitHub repo (no README), then follow GitHub's 'push an existing repository' commands
-- [ ] Add the other three as collaborators
-- [ ] Settings > Branches: make sure there are NO protection rules on `main` (we push straight to it)
-- [ ] Optional: `npx shadcn@latest init` for nicer UI components
+## 1. Install (once)
+- [ ] Node.js LTS: https://nodejs.org
+- [ ] Git (Mac: run `git --version` in Terminal and accept the install prompt)
+- [ ] Your AI tool: Claude Code (`npm install -g @anthropic-ai/claude-code`) or Cursor (https://cursor.com)
+- [ ] Send George your GitHub username, then accept the invite email from GitHub
 
-## 3. Accounts and keys (one person per service, 15 min)
-Put every key in the team group chat or a shared password manager. Never in the repo.
-- [ ] **Supabase:** new project, copy the Project URL and anon key (Project Settings > API). Turn on Email auth
-- [ ] **Anthropic:** console.anthropic.com, create an API key, add a few pounds of credit
-- [ ] **ElevenLabs:** create an API key (free tier is fine for a demo)
-- [ ] **Firecrawl:** create an API key
-- [ ] **Vercel:** sign in with GitHub, import the repo, add all keys under Settings > Environment Variables
+## 2. Get the repo running
+```
+git clone https://github.com/Geomaniac15/guh-2026.git
+cd guh-2026
+npm install
+```
+- [ ] Create a file called `.env.local` in the `guh-2026` folder and paste in the keys George DMs you
+- [ ] Run `npm run dev` and open http://localhost:3000
+- [ ] Sign up with your real email (fake ones like test@gmail.com get rejected) and check the dashboard loads
 
-## 4. Prove it works (15 min)
-- [ ] Copy `.env.example` to `.env.local` and fill in the keys
-- [ ] In Supabase > Authentication > Sign In / Providers > Email, turn OFF 'Confirm email' (saves time at a hackathon)
-- [ ] `npm run dev`, open http://localhost:3000, sign up, go to the dashboard and press 'Ask Claude'
+Never commit `.env.local` or paste the keys anywhere public. It's already in `.gitignore`, so `git add .` won't pick it up.
 
-- [ ] Push, wait for Vercel, and check it works on the live URL
-- [ ] Everyone clones the repo, creates `.env.local` with the keys, and runs it locally
+## 3. How the repo works
+- `app/` each folder is a page: `app/dashboard/page.tsx` is `/dashboard`
+- `app/api/` the backend. Anything using a secret key goes here
+- `components/` reusable UI pieces
+- `lib/ai.ts` call Claude with `ask(prompt)`
+- `lib/voice.ts` text to speech with `speak(text)`
+- `CLAUDE.md` rules the AI follows. Claude Code reads it automatically; in Cursor, mention it in your first prompt
 
-## 5. Saturday plan
+## 4. Saturday plan
+Hacking is 12:00 to 18:00 only, no late submissions.
+
 | Time | What |
 |---|---|
 | 11:00 | Opening ceremony: write down every challenge track and prize |
@@ -50,8 +45,10 @@ Put every key in the team group chat or a shared password manager. Never in the 
 | 17:30 | Submit (don't wait for 18:00) |
 | 18:30 | Judging: everyone can explain how it works |
 
-## Vibecoding rules
-- Commit every time something works: `git add . && git commit -m 'working: X' && git push`
-- If the AI wrecks things: `git reset --hard HEAD` goes back to the last commit
-- Pull before you start each new task: `git pull`
+## 5. Git survival guide
+- Before starting each task: `git pull`
+- When something works: `git add . && git commit -m 'working: X' && git push`
+- AI broke everything? `git reset --hard HEAD` goes back to your last commit
+- Push rejected? Run `git pull`, then push again
+- Merge conflict you don't understand? Shout. Don't let the AI guess
 - Stuck for 20 minutes? Hardcode it. The demo matters more than the plumbing
