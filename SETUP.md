@@ -6,9 +6,6 @@ Live site: see the group chat. Every push to `main` updates it automatically in 
 
 ## 1. Install (once)
 - [ ] Node.js LTS: https://nodejs.org
-- [ ] Git (Mac: run `git --version` in Terminal and accept the install prompt)
-- [ ] Your AI tool: Claude Code (`npm install -g @anthropic-ai/claude-code`) or Cursor (https://cursor.com)
-- [ ] Send George your GitHub username, then accept the invite email from GitHub
 
 ## 2. Get the repo running
 ```
@@ -30,7 +27,7 @@ Never commit `.env.local` or paste the keys anywhere public. It's already in `.g
 - `lib/voice.ts` text to speech with `speak(text)`
 - `CLAUDE.md` rules the AI follows. Claude Code reads it automatically; in Cursor, mention it in your first prompt
 
-## 4. Saturday plan
+## 4. Saturday plan??
 Hacking is 12:00 to 18:00 only, no late submissions.
 
 | Time | What |
