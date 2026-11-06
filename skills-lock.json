@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": {
+    "claude-api": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/claude-api/SKILL.md",
+      "computedHash": "b0d8cf8ac6b744f9e8feb3aa0f5c8e2c621952974cd114bea4dbd009c57b2cf3"
+    },
+    "firecrawl-build": {
+      "source": "firecrawl/skills",
+      "sourceType": "github",
+      "skillPath": "skills/build/firecrawl-build/SKILL.md",
+      "computedHash": "142300c4c9bba6cf78475b1a9cec8b8983398012fea8332bf51e9de842f06471"
+    },
+    "firecrawl-build-interact": {
+      "source": "firecrawl/skills",
+      "sourceType": "github",
+      "skillPath": "skills/build/firecrawl-build-interact/SKILL.md",
+      "computedHash": "1826b289e3338a770113eccf9f148739cc26cc1ed7bcb1f74bd22b14ef71dc4f"
+    },
+    "firecrawl-build-onboarding": {
+      "source": "firecrawl/skills",
+      "sourceType": "github",
+      "skillPath": "skills/build/firecrawl-build-onboarding/SKILL.md",
+      "computedHash": "5d41610a30bd446bce4c21356a6945f70279826cb4942cda125fa202872df45e"
+    },
+    "firecrawl-build-scrape": {
+      "source": "firecrawl/skills",
+      "sourceType": "github",
+      "skillPath": "skills/build/firecrawl-build-scrape/SKILL.md",
+      "computedHash": "f6a632c906376f0e3883b7129d01031a6b87164ee2d9f735c184581ce221d939"
+    },
+    "firecrawl-build-search": {
+      "source": "firecrawl/skills",
+      "sourceType": "github",
+      "skillPath": "skills/build/firecrawl-build-search/SKILL.md",
+      "computedHash": "d3f050efb3e3344489eab65ef66975164ba6b0e147cab854c59fe788ab7e7589"
+    },
+    "speech-to-text": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "speech-to-text/SKILL.md",
+      "computedHash": "5fc18101504a58f47ce89feba6ba131fce5fb86998c867960e60ba5707557e6c"
+    },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase/SKILL.md",
+      "computedHash": "211141fd078b4b3645803868528d54221bc7755d24d5c8af45a366785c151dba"
+    },
+    "text-to-speech": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "text-to-speech/SKILL.md",
+      "computedHash": "21391cae9c77ac1f843c2001e489f84091bfc8bd2e1199e7f63786a5609d5904"
+    }
+  }
+}
