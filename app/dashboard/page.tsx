@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AskClaude from '@/components/AskClaude'
+import LoadDemoButton from '@/components/LoadDemoButton'
 
 export default function DashboardPage() {
   return (
@@ -10,6 +11,7 @@ export default function DashboardPage() {
       <Suspense fallback={<p className='text-zinc-600'>Loading...</p>}>
         <UserInfo />
       </Suspense>
+      <LoadDemoButton />
       <AskClaude />
     </main>
   )
