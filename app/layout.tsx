@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import Navbar from '@/components/Navbar'
+import TabBar from '@/components/TabBar'
 import './globals.css'
 
 const inter = Inter({ variable: '--font-inter', subsets: ['latin'] })
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           <Navbar />
         </Suspense>
         {children}
+        <TabBar />
       </body>
     </html>
   )

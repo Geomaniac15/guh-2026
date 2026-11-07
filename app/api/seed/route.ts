@@ -70,6 +70,7 @@ export async function POST() {
   const results = await Promise.all([
     supabase.from('transactions').delete().eq('user_id', user_id),
     supabase.from('night_outs').delete().eq('user_id', user_id),
+    supabase.from('user_merchant_rules').delete().eq('user_id', user_id),
   ])
   const profile = await supabase.from('profiles').upsert({
     user_id,
@@ -80,6 +81,7 @@ export async function POST() {
     last_weekly_budget: null,
     budget_ref: null,
     last_budget_date: null,
+    bank_connected_at: new Date().toISOString(),
     next_loan_date: '2027-01-10',
     weekly_savings_target: 5,
     ring_mode: 'runway',

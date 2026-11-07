@@ -10,7 +10,7 @@ import FaceIdUnlock from '@/components/FaceIdUnlock'
 // App lock screen: rings and mood only, amounts hidden until unlock
 export default function LockedPage() {
   return (
-    <main className='mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[420px] flex-col items-center px-6 pb-10 pt-16 text-center'>
+    <main className='mx-auto flex page-min-h w-full max-w-[420px] flex-col items-center px-6 pb-10 pt-16 text-center'>
       <Suspense fallback={<div className='size-[170px] animate-pulse rounded-full bg-card' />}>
         <LockedStatus />
       </Suspense>

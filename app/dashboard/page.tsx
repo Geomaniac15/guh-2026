@@ -2,21 +2,21 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { gbp, summary } from '@/lib/runway'
+import { CATEGORY_LABELS, gbp, summary } from '@/lib/runway'
 import { loadRunway } from '@/lib/data'
 import Rings from '@/components/Rings'
 import MoodChip from '@/components/MoodChip'
 import Timeline from '@/components/Timeline'
-import AddActions from '@/components/AddActions'
 import LoadDemoButton from '@/components/LoadDemoButton'
 import Flame from '@/components/Flame'
 import BudgetCard from '@/components/BudgetCard'
 import LockGate from '@/components/LockGate'
-import LockButton from '@/components/LockButton'
+import DashboardMenu from '@/components/DashboardMenu'
+import TransactionList, { type TxRow } from '@/components/TransactionList'
 
 export default function DashboardPage() {
   return (
-    <main className='mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[420px] flex-col px-5 py-6'>
+    <main className='mx-auto flex page-min-h w-full max-w-[420px] flex-col px-5 py-6'>
       {/* Opened fresh? Show the Face ID lock first */}
       <LockGate fallback={<TodaySkeleton />}>
         <Suspense fallback={<TodaySkeleton />}>
@@ -68,7 +68,7 @@ async function Today() {
         </div>
         <div className='flex items-center gap-2'>
           <MoodChip mood={s.mood} />
-          <LockButton />
+          <DashboardMenu />
         </div>
       </header>
 
@@ -97,14 +97,33 @@ async function Today() {
         {profile.streak}-day streak · amounts hidden on widgets
       </p>
 
-      <div className='mt-auto space-y-4 pt-4'>
-        <AddActions />
-        <div className='flex justify-center opacity-60'>
-          <LoadDemoButton />
-        </div>
-      </div>
+      <TransactionList rows={latest(transactions, now)} />
     </div>
   )
+}
+
+// Latest 10 for the list, with display text worked out on the server (UK time)
+function latest(transactions: Awaited<ReturnType<typeof loadRunway>>['transactions'], now: Date): TxRow[] {
+  const uk = { timeZone: 'Europe/London' } as const
+  const today = now.toLocaleDateString('en-GB', uk)
+  return [...transactions]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, 10)
+    .map((t) => {
+      const at = new Date(t.created_at)
+      return {
+        id: t.id!,
+        kind: t.kind,
+        amount: Number(t.amount),
+        category: t.category,
+        name: t.merchant || t.note || CATEGORY_LABELS[t.category ?? ''] || 'Transaction',
+        when:
+          at.toLocaleDateString('en-GB', uk) === today
+            ? `Today ${at.toLocaleTimeString('en-GB', { ...uk, hour: '2-digit', minute: '2-digit' })}`
+            : at.toLocaleDateString('en-GB', { ...uk, weekday: 'short', day: 'numeric', month: 'short' }),
+        ai: !!t.ai_categorised,
+      }
+    })
 }
 
 function Stat({ label, value, warn }: { label: string; value: string; warn?: boolean }) {

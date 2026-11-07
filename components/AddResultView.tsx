@@ -2,9 +2,10 @@
 
 import type { AddResult } from '@/app/dashboard/actions'
 import Timeline from '@/components/Timeline'
-import { gbp } from '@/lib/runway'
+import { CATEGORY_LABELS, gbp } from '@/lib/runway'
 
-type Props = { result: Exclude<AddResult, { error: string }>; onDone: () => void }
+// category/ai are set for bank feed transactions
+type Props = { result: Exclude<AddResult, { error: string }> & { category?: string; ai?: boolean }; onDone: () => void }
 
 // "+3.2 days of runway" / "That cost 1.4 days" screen shown after logging
 export default function AddResultView({ result, onDone }: Props) {
@@ -22,7 +23,10 @@ export default function AddResultView({ result, onDone }: Props) {
       <div className='flex items-center justify-between rounded-2xl bg-card p-4'>
         <div>
           <p className='font-semibold'>{note || (shift ? 'Shift' : 'Spend')}</p>
-          <p className='text-sm text-muted'>{shift ? 'Shift pay' : 'Spend'}</p>
+          <p className='flex items-center gap-1.5 text-sm text-muted'>
+            {shift ? 'Shift pay' : result.category ? CATEGORY_LABELS[result.category] : 'Spend'}
+            {result.ai && <span className='rounded-full bg-blue/15 px-2 py-0.5 text-xs font-semibold text-blue'>AI</span>}
+          </p>
         </div>
         <p className='font-display text-2xl font-bold'>
           {shift ? '+' : '−'}

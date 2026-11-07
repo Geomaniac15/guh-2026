@@ -4,7 +4,7 @@ import Rings from '@/components/Rings'
 // Landing page
 export default function Home() {
   return (
-    <main className='mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[420px] flex-col px-5 pb-10 pt-12'>
+    <main className='mx-auto flex page-min-h w-full max-w-[420px] flex-col px-5 pb-10 pt-12'>
       <div className='flex flex-1 flex-col items-center justify-center gap-8 text-center'>
         <Rings progress={[0.78, 0.9, 0.62]} size={200} />
         <div className='space-y-4'>

@@ -2,17 +2,9 @@
 
 import { useState } from 'react'
 import { addTransaction, type AddResult } from '@/app/dashboard/actions'
+import { CATEGORY_LABELS } from '@/lib/runway'
 
-const CATEGORIES = [
-  ['food', 'Food shop'],
-  ['transport', 'Transport'],
-  ['course', 'Course costs'],
-  ['bills', 'Bills'],
-  ['going_out', 'Going out'],
-  ['takeaways', 'Takeaways'],
-  ['shopping', 'Shopping'],
-  ['other', 'Other'],
-]
+const CATEGORIES = Object.entries(CATEGORY_LABELS)
 
 const input = 'w-full rounded-2xl border border-line bg-card px-4 py-3 text-lg outline-none focus:border-blue'
 const label = 'block space-y-2 text-sm text-muted'

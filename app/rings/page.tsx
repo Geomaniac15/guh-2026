@@ -7,7 +7,7 @@ import LoadDemoButton from '@/components/LoadDemoButton'
 
 export default function RingsPage() {
   return (
-    <main className='mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[420px] flex-col gap-5 px-5 py-6'>
+    <main className='mx-auto flex page-min-h w-full max-w-[420px] flex-col gap-5 px-5 py-6'>
       <header>
         <p className='text-sm text-muted'>Settings</p>
         <h1 className='font-display text-4xl font-bold'>Your rings</h1>

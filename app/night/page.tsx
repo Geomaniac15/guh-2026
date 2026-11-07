@@ -9,7 +9,7 @@ import LoadDemoButton from '@/components/LoadDemoButton'
 
 export default function NightPage() {
   return (
-    <main className='mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[420px] flex-col px-5 py-6'>
+    <main className='mx-auto flex page-min-h w-full max-w-[420px] flex-col px-5 py-6'>
       <Suspense fallback={<NightSkeleton />}>
         <Night />
       </Suspense>

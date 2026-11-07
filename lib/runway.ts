@@ -17,6 +17,7 @@ export type Profile = {
   last_weekly_budget: number | null // budget saved on last_budget_date
   budget_ref: number | null // previous day's budget: the anchor for gradual change today
   last_budget_date: string | null
+  bank_connected_at?: string | null
 }
 
 export type BudgetMode = 'saver' | 'balanced' | 'relaxed'
@@ -34,6 +35,9 @@ export type Transaction = {
   kind: 'spend' | 'shift' | 'saving'
   category: string | null
   note?: string | null
+  merchant?: string | null // bank feed description, e.g. 'NANDOS MANCHESTER'
+  ai_categorised?: boolean
+  source?: 'manual' | 'bank'
   created_at: string
 }
 
@@ -87,6 +91,17 @@ export const CATEGORY_GROUP: Record<string, 'needs' | 'wants'> = {
   takeaways: 'wants',
   shopping: 'wants',
   other: 'wants',
+}
+
+export const CATEGORY_LABELS: Record<string, string> = {
+  food: 'Food shop',
+  transport: 'Transport',
+  course: 'Course costs',
+  bills: 'Bills',
+  going_out: 'Going out',
+  takeaways: 'Takeaways',
+  shopping: 'Shopping',
+  other: 'Other',
 }
 
 const DAY = 24 * 60 * 60 * 1000

@@ -3,7 +3,7 @@
 import { refresh } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { loadActiveNight } from '@/lib/data'
-import { addTransaction } from '@/app/dashboard/actions'
+import { recordTransaction } from '@/lib/record'
 
 async function user() {
   const supabase = await createClient()
@@ -35,12 +35,7 @@ export async function logNightSpend(amount: number) {
   const { night } = await loadActiveNight(supabase, user_id)
   if (!night) return { error: 'No night out running' }
 
-  const form = new FormData()
-  form.set('kind', 'spend')
-  form.set('amount', String(amount))
-  form.set('category', 'going_out')
-  form.set('note', 'Night out')
-  const res = await addTransaction(form)
+  const res = await recordTransaction(supabase, user_id, { kind: 'spend', amount, category: 'going_out', note: 'Night out' })
   if ('error' in res) return { error: res.error }
 
   const { error } = await supabase

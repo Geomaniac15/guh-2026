@@ -2,82 +2,72 @@
 
 import { refresh } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { loadRunway } from '@/lib/data'
-import { BUDGET_MODES, CATEGORY_GROUP, summary } from '@/lib/runway'
+import { normaliseMerchant } from '@/lib/categorise'
+import { recordTransaction, type AddResult } from '@/lib/record'
+import { BUDGET_MODES, CATEGORY_GROUP } from '@/lib/runway'
 
-export type AddResult =
-  | { error: string }
-  | {
-      kind: 'shift' | 'spend'
-      amount: number
-      note: string
-      days: number
-      covered: boolean // a needs spend paid from essentials, so runway is unchanged
-      before: { runway: number; allowance: number }
-      after: { runway: number; allowance: number }
-      untilLoan: number
-      now: number
-    }
+export type { AddResult }
 
-// Logs a shift or a spend, updates the pot, and returns before/after runway numbers
+// Logs a manual (cash) shift or spend
 export async function addTransaction(formData: FormData): Promise<AddResult> {
+  const supabase = await createClient()
+  const { data: auth } = await supabase.auth.getClaims()
+  if (!auth?.claims) return { error: 'Not logged in' }
+
+  const kind = formData.get('kind') === 'shift' ? 'shift' : 'spend'
+  const amount =
+    kind === 'shift' ? Number(formData.get('hours')) * Number(formData.get('rate')) : Number(formData.get('amount'))
+  const res = await recordTransaction(supabase, auth.claims.sub, {
+    kind,
+    amount,
+    category: kind === 'spend' ? String(formData.get('category')) : null,
+    note: String(formData.get('note') ?? ''),
+  })
+  if (!('error' in res)) refresh()
+  return res
+}
+
+// Fixes a transaction's category and remembers merchant -> category for future bank transactions
+export async function correctCategory(transactionId: string, category: string) {
+  if (!Object.hasOwn(CATEGORY_GROUP, category)) return { error: 'Pick a category' }
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getClaims()
   if (!auth?.claims) return { error: 'Not logged in' }
   const user_id = auth.claims.sub
 
-  const kind = formData.get('kind') === 'shift' ? 'shift' : 'spend'
-  const note = String(formData.get('note') ?? '').slice(0, 80)
-  let amount: number
-  let category: string | null = null
-  if (kind === 'shift') {
-    amount = Number(formData.get('hours')) * Number(formData.get('rate'))
-  } else {
-    amount = Number(formData.get('amount'))
-    category = String(formData.get('category'))
-    if (!Object.hasOwn(CATEGORY_GROUP, category)) return { error: 'Pick a category' }
+  const { data: tx } = await supabase
+    .from('transactions')
+    .select('id, kind, amount, category, merchant')
+    .eq('id', transactionId)
+    .eq('user_id', user_id)
+    .maybeSingle()
+  if (!tx || tx.kind !== 'spend') return { error: 'Only spends have a category' }
+
+  const { error } = await supabase
+    .from('transactions')
+    .update({ category, ai_categorised: false })
+    .eq('id', tx.id)
+  if (error) return { error: error.message }
+
+  // Needs spends come out of essentials, so moving between needs and wants moves the money back
+  // shortcut: if essentials had already hit £0 when it was logged, this can over-restore slightly
+  const was = CATEGORY_GROUP[tx.category ?? '']
+  const now = CATEGORY_GROUP[category]
+  if (was !== now) {
+    const { data: profile } = await supabase.from('profiles').select('essentials_remaining').eq('user_id', user_id).single()
+    if (profile) {
+      const essentials = Number(profile.essentials_remaining) + (now === 'needs' ? -1 : 1) * Number(tx.amount)
+      await supabase.from('profiles').update({ essentials_remaining: Math.max(0, essentials) }).eq('user_id', user_id)
+    }
   }
-  amount = Math.round(amount * 100) / 100
-  if (!Number.isFinite(amount) || amount <= 0 || amount > 10000) return { error: 'Enter a valid amount' }
 
-  const { profile, transactions } = await loadRunway(supabase, user_id)
-  if (!profile) return { error: 'No profile yet. Load demo data first.' }
-
-  // A shift is part of the expected shift income, so it moves from "expected" to the pot.
-  // A needs spend (food, bills...) is paid from the essentials set aside.
-  const isNeeds = category !== null && CATEGORY_GROUP[category] === 'needs'
-  const changes =
-    kind === 'shift'
-      ? {
-          pot: Number(profile.pot) + amount,
-          expected_shift_income: Math.max(0, Number(profile.expected_shift_income) - amount),
-        }
-      : {
-          pot: Number(profile.pot) - amount,
-          ...(isNeeds && { essentials_remaining: Math.max(0, Number(profile.essentials_remaining) - amount) }),
-        }
-
-  const { error: insertError } = await supabase.from('transactions').insert({ user_id, amount, kind, category, note })
-  if (insertError) return { error: insertError.message }
-  const { error: updateError } = await supabase.from('profiles').update(changes).eq('user_id', user_id)
-  if (updateError) return { error: updateError.message }
-
-  // Habits only count days before today, so the old transaction list gives the same pace before and after
-  const before = summary(profile, transactions)
-  const after = summary({ ...profile, ...changes }, transactions)
-  const days = Math.abs(after.runway - before.runway)
+  if (tx.merchant) {
+    await supabase
+      .from('user_merchant_rules')
+      .upsert({ user_id, merchant: normaliseMerchant(tx.merchant), category }, { onConflict: 'user_id,merchant' })
+  }
   refresh()
-  return {
-    kind,
-    amount,
-    note,
-    days: Math.round(days * 10) / 10,
-    covered: isNeeds && days < 0.05,
-    before: { runway: before.runway, allowance: before.allowance },
-    after: { runway: after.runway, allowance: after.allowance },
-    untilLoan: before.untilLoan,
-    now: Date.now(),
-  }
+  return { ok: true }
 }
 
 // Saver / Balanced / Relaxed. Clears the gradual-change anchor so the new mode applies straight away.
