@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useLayoutEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { saveRings } from '@/app/rings/actions'
 import Rings from '@/components/Rings'
@@ -35,6 +35,15 @@ export default function RingsEditor({ profile, transactions, now }: Props) {
   const [picking, setPicking] = useState<number | null>(null)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const [pending, startTransition] = useTransition()
+
+  // Close the picker and clear "Saved" if you navigate away (Next keeps the page alive in the background)
+  useLayoutEffect(
+    () => () => {
+      setPicking(null)
+      setMessage(null)
+    },
+    []
+  )
 
   // Preview the draft exactly as the dashboard will compute it
   const draft: Profile = {

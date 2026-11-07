@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { AddResult } from '@/app/dashboard/actions'
@@ -17,6 +17,16 @@ export default function DashboardMenu() {
   const [adding, setAdding] = useState(false)
   const [result, setResult] = useState<Exclude<AddResult, { error: string }> | null>(null)
   const [status, setStatus] = useState('')
+
+  // Next keeps the dashboard alive when you navigate away; close the sheet so it isn't open when you come back
+  useLayoutEffect(
+    () => () => {
+      setOpen(false)
+      setAdding(false)
+      setResult(null)
+    },
+    []
+  )
 
   function closeAdd() {
     setAdding(false)

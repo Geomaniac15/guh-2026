@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useLayoutEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { simulateBankTransaction } from '@/app/connect/actions'
 import AddResultView from '@/components/AddResultView'
@@ -20,6 +20,9 @@ export default function SimulateBank() {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [, startTransition] = useTransition()
+
+  // Next keeps this page alive when you navigate away; close the result so coming back shows the buttons
+  useLayoutEffect(() => () => setResult(null), [])
 
   function push(id: string) {
     setError('')
@@ -54,7 +57,13 @@ export default function SimulateBank() {
       {result && (
         <div className='fixed inset-0 z-50 overflow-y-auto bg-background'>
           <div className='mx-auto flex min-h-full w-full max-w-[420px] flex-col px-5 py-8'>
-            <AddResultView result={result} onDone={() => router.push('/dashboard')} />
+            <AddResultView
+              result={result}
+              onDone={() => {
+                setResult(null)
+                router.push('/dashboard')
+              }}
+            />
           </div>
         </div>
       )}

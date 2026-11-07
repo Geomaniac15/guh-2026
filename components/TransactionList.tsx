@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useLayoutEffect, useState, useTransition } from 'react'
 import { correctCategory } from '@/app/dashboard/actions'
 import { CATEGORY_GROUP, CATEGORY_LABELS, gbp } from '@/lib/runway'
 
@@ -19,6 +19,9 @@ export default function TransactionList({ rows }: { rows: TxRow[] }) {
   const [editing, setEditing] = useState<TxRow | null>(null)
   const [error, setError] = useState('')
   const [pending, startTransition] = useTransition()
+
+  // Close the picker if you navigate away (Next keeps the page alive in the background)
+  useLayoutEffect(() => () => setEditing(null), [])
 
   function pick(category: string) {
     if (!editing) return
