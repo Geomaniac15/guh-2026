@@ -15,7 +15,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang='en' className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}>
-      <body className='flex min-h-full flex-col'>
+      {/* Browser extensions (e.g. Grammarly) add attributes to body before React loads */}
+      <body className='flex min-h-full flex-col' suppressHydrationWarning>
         <Suspense fallback={<nav className='h-[49px] border-b' />}>
           <Navbar />
         </Suspense>
