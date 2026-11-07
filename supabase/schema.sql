@@ -19,7 +19,7 @@ create table if not exists transactions (
   user_id uuid not null references auth.users on delete cascade default auth.uid(),
   amount numeric not null check (amount >= 0),
   kind text not null check (kind in ('spend', 'shift', 'saving')),
-  category text check (category in ('needs', 'wants', 'going_out', 'food', 'takeaways', 'transport', 'course')),
+  category text check (category in ('food', 'transport', 'course', 'bills', 'going_out', 'takeaways', 'shopping', 'other')),
   note text,
   created_at timestamptz default now()
 );
@@ -55,3 +55,10 @@ create policy "own night_outs select" on night_outs for select using (user_id = 
 create policy "own night_outs insert" on night_outs for insert with check (user_id = auth.uid());
 create policy "own night_outs update" on night_outs for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own night_outs delete" on night_outs for delete using (user_id = auth.uid());
+
+-- Migration (7 Nov): categories changed. If you already ran the file above, run only these lines.
+update transactions set category = 'bills' where category = 'needs';
+update transactions set category = 'other' where category = 'wants';
+alter table transactions drop constraint if exists transactions_category_check;
+alter table transactions add constraint transactions_category_check
+  check (category in ('food', 'transport', 'course', 'bills', 'going_out', 'takeaways', 'shopping', 'other'));

@@ -12,7 +12,7 @@ const DEMO: [number, number, string, string | null, string][] = [
   [2, 5, 'saving', null, 'Weekly saving'],
   [3, 12.6, 'spend', 'food', 'Aldi food shop'],
   [4, 2.0, 'spend', 'transport', 'Bus to campus'],
-  [4, 3.1, 'spend', 'wants', 'Coffee'],
+  [4, 3.1, 'spend', 'other', 'Coffee'],
   [5, 9.8, 'spend', 'going_out', 'Spoons'],
   [5, 6.5, 'spend', 'transport', 'Uber home'],
   [6, 2.2, 'spend', 'course', 'Printing'],

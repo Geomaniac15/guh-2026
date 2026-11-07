@@ -47,7 +47,16 @@ export const BASIC_RINGS: Ring[] = [
   { kind: 'savings', label: 'Savings', period: 'term' },
 ]
 
-export const NEEDS_CATEGORIES = ['needs', 'food', 'transport', 'course']
+export const CATEGORY_GROUP: Record<string, 'needs' | 'wants'> = {
+  food: 'needs',
+  transport: 'needs',
+  course: 'needs',
+  bills: 'needs',
+  going_out: 'wants',
+  takeaways: 'wants',
+  shopping: 'wants',
+  other: 'wants',
+}
 
 const DAY = 24 * 60 * 60 * 1000
 const clamp = (n: number) => Math.min(1, Math.max(0, Number.isFinite(n) ? n : 0))
@@ -130,8 +139,7 @@ export function ringProgress(ring: Ring, { profile, transactions, now = new Date
     }
     case 'needs':
     case 'wants': {
-      const isNeeds = (t: Transaction) => NEEDS_CATEGORIES.includes(t.category ?? '')
-      const used = sum(spends(transactions).filter((t) => (ring.kind === 'needs') === isNeeds(t)))
+      const used = sum(spends(transactions).filter((t) => CATEGORY_GROUP[t.category ?? ''] === ring.kind))
       const pct = ring.kind === 'needs' ? profile.needs_pct : profile.wants_pct
       return clamp(used / ((pot * pct) / 100))
     }
@@ -139,3 +147,23 @@ export function ringProgress(ring: Ring, { profile, transactions, now = new Date
       return clamp(sum(spends(week).filter((t) => t.category === ring.category)) / (ring.target ?? 25))
   }
 }
+
+// Everything a screen needs, computed once
+export function summary(profile: Profile, transactions: Transaction[], now = new Date()) {
+  const data = { profile, transactions, now }
+  const allowance = dailyAllowance(profile, now)
+  const today = spentToday(transactions, now)
+  return {
+    runway: runwayDays(profile, transactions, now),
+    untilLoan: daysUntilLoan(profile, now),
+    shortfall: shortfallDays(profile, transactions, now),
+    allowance,
+    spentToday: today,
+    leftToday: Math.max(0, allowance - today),
+    mood: mood(data),
+    rings: ringsFor(profile),
+    progress: ringsFor(profile).map((r) => ringProgress(r, data)),
+  }
+}
+
+export type Summary = ReturnType<typeof summary>
