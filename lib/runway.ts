@@ -38,6 +38,7 @@ export type Transaction = {
 }
 
 export type Ring = {
+  id?: string
   kind: 'allowance' | 'savings' | 'loan' | 'needs' | 'wants' | 'category'
   label: string
   target?: number
@@ -49,16 +50,32 @@ export type Mood = 'Comfortable' | 'Careful' | 'Tight'
 
 export type RunwayData = { profile: Profile; transactions: Transaction[]; now?: Date }
 
-export const RUNWAY_RINGS: Ring[] = [
-  { kind: 'allowance', label: "Today's allowance", period: 'day' },
-  { kind: 'savings', label: 'Savings', period: 'week' },
-  { kind: 'loan', label: 'Make it to the loan', period: 'term' },
+// Every ring a user can pick for a custom slot, grouped as in the picker
+export const RING_CHOICES: (Ring & { id: string; group: 'Runway' | 'Basic' | 'Categories'; description: string })[] = [
+  { id: 'allowance', group: 'Runway', kind: 'allowance', label: "Today's allowance", period: 'day', description: "Stay within today's amount" },
+  { id: 'savings', group: 'Runway', kind: 'savings', label: 'Savings', period: 'week', description: 'A small weekly target, e.g. £5' },
+  { id: 'loan', group: 'Runway', kind: 'loan', label: 'Make it to the loan', period: 'term', description: 'Runway reaches your next instalment' },
+  { id: 'needs', group: 'Basic', kind: 'needs', label: 'Needs', period: 'term', description: 'Food, bills, transport, course' },
+  { id: 'wants', group: 'Basic', kind: 'wants', label: 'Wants', period: 'term', description: 'Everything else' },
+  { id: 'cat_going_out', group: 'Categories', kind: 'category', category: 'going_out', target: 25, label: 'Going out', period: 'week', description: 'Weekly limit' },
+  { id: 'cat_food', group: 'Categories', kind: 'category', category: 'food', target: 40, label: 'Food shop', period: 'week', description: 'Weekly limit' },
+  { id: 'cat_takeaways', group: 'Categories', kind: 'category', category: 'takeaways', target: 15, label: 'Takeaways', period: 'week', description: 'Weekly limit' },
+  { id: 'cat_course', group: 'Categories', kind: 'category', category: 'course', target: 10, label: 'Course costs', period: 'week', description: 'Weekly limit' },
 ]
 
+// The stored ring for a picker id (drops the picker-only group/description)
+export function ringFromChoice(id: string): Ring | null {
+  const c = RING_CHOICES.find((r) => r.id === id)
+  return c ? { id: c.id, kind: c.kind, label: c.label, period: c.period, target: c.target, category: c.category } : null
+}
+const choice = (id: string) => ringFromChoice(id)!
+
+export const RUNWAY_RINGS: Ring[] = ['allowance', 'savings', 'loan'].map(choice)
+
 export const BASIC_RINGS: Ring[] = [
-  { kind: 'needs', label: 'Needs', period: 'term' },
-  { kind: 'wants', label: 'Wants', period: 'term' },
-  { kind: 'savings', label: 'Savings', period: 'term' },
+  choice('needs'),
+  choice('wants'),
+  { id: 'savings_term', kind: 'savings', label: 'Savings', period: 'term' },
 ]
 
 export const CATEGORY_GROUP: Record<string, 'needs' | 'wants'> = {

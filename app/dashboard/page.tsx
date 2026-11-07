@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { gbp, summary } from '@/lib/runway'
@@ -64,7 +65,9 @@ async function Today() {
       </header>
 
       <section className='flex items-center gap-5'>
-        <Rings progress={s.progress} size={150} />
+        <Link href='/rings' aria-label='Customise your rings'>
+          <Rings progress={s.progress} size={150} />
+        </Link>
         <div>
           <p className='font-display text-7xl font-bold leading-none'>{Math.round(s.runway)}</p>
           <p className='mt-1 font-medium'>days of runway</p>
