@@ -62,3 +62,13 @@ update transactions set category = 'bills' where category = 'needs';
 update transactions set category = 'other' where category = 'wants';
 alter table transactions add constraint transactions_category_check
   check (category in ('food', 'transport', 'course', 'bills', 'going_out', 'takeaways', 'shopping', 'other'));
+
+-- Migration (7 Nov): weekly budget engine. Run these lines once.
+alter table profiles add column if not exists expected_shift_income numeric default 0;
+alter table profiles add column if not exists last_weekly_budget numeric;
+alter table profiles add column if not exists budget_mode text default 'balanced';
+alter table profiles drop constraint if exists profiles_budget_mode_check;
+alter table profiles add constraint profiles_budget_mode_check check (budget_mode in ('saver', 'balanced', 'relaxed'));
+-- Gradual change: budget_ref is the previous day's budget (the 12% anchor), last_budget_date stops more than one save a day
+alter table profiles add column if not exists budget_ref numeric;
+alter table profiles add column if not exists last_budget_date date;

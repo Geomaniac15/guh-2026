@@ -1,13 +1,15 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { gbp, summary, type Profile, type Transaction } from '@/lib/runway'
+import { gbp, summary } from '@/lib/runway'
+import { loadRunway } from '@/lib/data'
 import Rings from '@/components/Rings'
 import MoodChip from '@/components/MoodChip'
 import Timeline from '@/components/Timeline'
 import AddActions from '@/components/AddActions'
 import LoadDemoButton from '@/components/LoadDemoButton'
 import Flame from '@/components/Flame'
+import BudgetCard from '@/components/BudgetCard'
 
 export default function DashboardPage() {
   return (
@@ -24,12 +26,7 @@ async function Today() {
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getClaims()
   if (!auth?.claims) redirect('/login')
-  const user_id = auth.claims.sub
-
-  const [{ data: profile, error }, { data: txs }] = await Promise.all([
-    supabase.from('profiles').select('*').eq('user_id', user_id).maybeSingle<Profile>(),
-    supabase.from('transactions').select('*').eq('user_id', user_id).returns<Transaction[]>(),
-  ])
+  const { profile, transactions, error } = await loadRunway(supabase, auth.claims.sub)
 
   if (error) {
     return (
@@ -53,7 +50,7 @@ async function Today() {
   }
 
   const now = new Date()
-  const s = summary(profile, txs ?? [], now)
+  const s = summary(profile, transactions, now)
   const date = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 
   return (
@@ -81,6 +78,8 @@ async function Today() {
         <Stat label="Today's allowance" value={gbp(s.allowance)} />
         <Stat label='Left today' value={gbp(s.leftToday)} warn={s.leftToday === 0} />
       </div>
+
+      <BudgetCard b={s.budget} pot={Number(profile.pot)} />
 
       <p className='flex items-center gap-2 text-sm text-muted'>
         <Flame />

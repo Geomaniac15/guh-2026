@@ -8,8 +8,9 @@ type Props = { result: Exclude<AddResult, { error: string }>; onDone: () => void
 
 // "+3.2 days of runway" / "That cost 1.4 days" screen shown after logging
 export default function AddResultView({ result, onDone }: Props) {
-  const { kind, amount, note, days, before, after, untilLoan, now } = result
+  const { kind, amount, note, days, covered, before, after, untilLoan, now } = result
   const shift = kind === 'shift'
+  const up = after.allowance >= before.allowance
 
   return (
     <div className='flex flex-1 flex-col gap-6'>
@@ -32,12 +33,14 @@ export default function AddResultView({ result, onDone }: Props) {
       <div className='text-center'>
         {shift ? (
           <p className='font-display text-7xl font-bold text-lime'>+{days.toFixed(1)}</p>
+        ) : covered ? (
+          <p className='font-display text-3xl font-bold text-lime'>Covered by your essentials</p>
         ) : (
           <p className='font-display text-2xl font-semibold'>
             That cost <span className='text-6xl font-bold text-orange'>{days.toFixed(1)}</span>
           </p>
         )}
-        <p className='mt-2 text-lg font-medium'>days of runway</p>
+        {!covered && <p className='mt-2 text-lg font-medium'>days of runway</p>}
       </div>
 
       <div className='flex items-center justify-center gap-6 text-center'>
@@ -56,9 +59,10 @@ export default function AddResultView({ result, onDone }: Props) {
 
       <Timeline runway={after.runway} untilLoan={untilLoan} now={now} />
 
-      <div className={`rounded-2xl p-4 text-sm ${shift ? 'bg-lime/10 text-lime' : 'bg-orange/10 text-orange'}`}>
-        Daily allowance {shift ? 'raised' : 'lowered'} from {gbp(before.allowance)} to {gbp(after.allowance)}, spread
-        evenly to your next loan.
+      <div className={`rounded-2xl p-4 text-sm ${up ? 'bg-lime/10 text-lime' : 'bg-orange/10 text-orange'}`}>
+        {Math.abs(after.allowance - before.allowance) < 0.005
+          ? `Daily allowance stays at ${gbp(after.allowance)}.`
+          : `Daily allowance ${up ? 'raised' : 'lowered'} from ${gbp(before.allowance)} to ${gbp(after.allowance)}. It moves at most 12% a day.`}
       </div>
 
       <button onClick={onDone} className='mt-auto rounded-2xl bg-blue py-4 font-semibold text-[#0B0D12]'>

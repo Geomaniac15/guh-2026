@@ -1,11 +1,31 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Profile, Transaction } from '@/lib/runway'
+import { budgetBreakdown, type Profile, type Transaction } from '@/lib/runway'
 
-// Loads one user's profile and transactions (RLS limits it to the signed-in user)
+const isoDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+// Loads one user's profile and transactions (RLS limits it to the signed-in user).
+// On the first load of each day it saves the weekly budget, so it can only move 12% a day.
 export async function loadRunway(supabase: SupabaseClient, user_id: string) {
   const [p, t] = await Promise.all([
     supabase.from('profiles').select('*').eq('user_id', user_id).maybeSingle<Profile>(),
     supabase.from('transactions').select('*').eq('user_id', user_id).returns<Transaction[]>(),
   ])
-  return { profile: p.data, transactions: t.data ?? [], error: p.error ?? t.error }
+  let profile = p.data
+  const transactions = t.data ?? []
+  const today = isoDate(new Date())
+
+  if (profile && profile.last_budget_date !== today) {
+    // Yesterday's saved budget becomes today's anchor
+    const rolled = { ...profile, budget_ref: profile.last_weekly_budget, last_budget_date: today }
+    rolled.last_weekly_budget = budgetBreakdown(rolled, transactions).weeklyBudget
+    const { error } = await supabase
+      .from('profiles')
+      .update({ budget_ref: rolled.budget_ref, last_weekly_budget: rolled.last_weekly_budget, last_budget_date: today })
+      .eq('user_id', user_id)
+    if (error) console.error('Budget save failed', error)
+    profile = rolled
+  }
+
+  return { profile, transactions, error: p.error ?? t.error }
 }
