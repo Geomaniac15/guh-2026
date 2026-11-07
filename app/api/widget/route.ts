@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { loadRunway } from '@/lib/data'
+import { loadActiveNight, loadRunway, nightFuel } from '@/lib/data'
 import { nudge, summary } from '@/lib/runway'
 
 // GET /api/widget?key=WIDGET_KEY -> demo user's gauges and mood for a Scriptable widget. Never returns pounds.
@@ -24,7 +24,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Demo login failed. Check DEMO_EMAIL / DEMO_PASSWORD.' }, { status: 500 })
   }
 
-  const { profile, transactions, error } = await loadRunway(supabase, auth.user.id)
+  const [{ profile, transactions, error }, { night }] = await Promise.all([
+    loadRunway(supabase, auth.user.id),
+    loadActiveNight(supabase, auth.user.id),
+  ])
   if (error || !profile) return NextResponse.json({ error: 'No demo data. Load demo data first.' }, { status: 404 })
 
   const s = summary(profile, transactions)
@@ -42,6 +45,8 @@ export async function GET(request: Request) {
         savings: r3(g.savings.fill),
       },
       shortfallDays: s.shortfall,
+      // Running night out, only if the user allowed it on the lock screen. Fuel only, no amounts.
+      night: night?.show_on_lock ? { fill: r3(nightFuel(night)), taxiKept: Number(night.taxi_reserve) > 0 } : null,
       mood: s.mood,
       nudge: nudge(s),
       streak: profile.streak,

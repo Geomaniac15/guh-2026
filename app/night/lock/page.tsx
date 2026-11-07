@@ -23,6 +23,14 @@ export default function NightLockPage() {
         <Link href='/locked' className='mt-4 text-center text-sm font-medium text-white/80'>
           Gauges only, no amounts. Tap to unlock and see figures.
         </Link>
+        {/* Clear way out: this screen hides the tab bar and the home-screen app has no back button */}
+        <Link
+          href='/night'
+          className='mt-4 flex min-h-[44px] w-full flex-col items-center justify-center gap-2 text-xs font-semibold text-white/70'
+        >
+          Back to Odo
+          <span className='h-1.5 w-32 rounded-full bg-white/80' aria-hidden />
+        </Link>
       </div>
     </main>
   )

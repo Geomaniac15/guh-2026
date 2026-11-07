@@ -2,6 +2,8 @@
 // Odo home screen widget for the Scriptable iOS app. Fuel gauges, range and mood, never pounds.
 // Setup: paste into a new Scriptable script, fill in APP and KEY, then add a Scriptable widget
 // (small, medium or large) to the home screen and pick this script.
+// Lock screen (iOS 16+): add a Scriptable lock screen widget (circular, rectangular or inline) and pick this
+// script. During a night out it shows tonight's fuel gauge, otherwise weekly fuel. No numbers on the lock screen.
 
 const APP = 'https://YOUR-APP.vercel.app'
 const KEY = 'PASTE_WIDGET_KEY_HERE'
@@ -222,6 +224,49 @@ function streak(parent, n) {
   text(s, String(n), 13, '#FF8A3D', true)
 }
 
+// Lock screen widgets. Not a Live Activity (that needs a native app): iOS refreshes these every few minutes.
+function lockScreen(w, data, family) {
+  const g = data.gauges
+  if (data.error || !g) {
+    w.addText('Odo')
+    return
+  }
+  const night = data.night
+  const fill = night ? night.fill : g.total.fill
+  const low = fill <= 0.25
+  if (night) w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000)
+
+  if (family === 'accessoryInline') {
+    w.addText(night ? `Night out · ${low ? 'fuel low' : 'fuel OK'}` : `Odo · ${g.total.status.toLowerCase()}`)
+    return
+  }
+  const ctx = canvas(60, 46)
+  gauge(ctx, 30, 30, 22, fill, night ? null : g.pace, WHITE)
+  const dial = ctx.getImage()
+
+  if (family === 'accessoryCircular') {
+    w.addAccessoryWidgetBackground = true
+    const img = w.addImage(dial)
+    img.imageSize = new Size(52, 40)
+    img.centerAlignImage()
+    const t = w.addText(night ? 'NIGHT' : 'WEEK')
+    t.font = Font.boldSystemFont(9)
+    t.centerAlignText()
+    return
+  }
+  // accessoryRectangular
+  const row = w.addStack()
+  row.centerAlignContent()
+  row.addImage(dial).imageSize = new Size(54, 42)
+  row.addSpacer(6)
+  const col = row.addStack()
+  col.layoutVertically()
+  const title = col.addText(night ? 'Night out' : 'Weekly fuel')
+  title.font = Font.boldSystemFont(14)
+  const sub = col.addText(night ? (low ? 'Running low' : night.taxiKept ? 'Taxi home kept aside' : 'Fuel for tonight') : g.total.status)
+  sub.font = Font.systemFont(11)
+}
+
 const data = await load()
 const w = new ListWidget()
 w.backgroundColor = new Color('#0B0D12')
@@ -230,7 +275,9 @@ w.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000)
 // Previewing in the app (no widgetFamily) shows the medium size
 const family = config.widgetFamily || 'medium'
 
-if (data.error || !data.gauges) {
+if (family.startsWith('accessory')) {
+  lockScreen(w, data, family)
+} else if (data.error || !data.gauges) {
   text(w, `Odo unavailable\n${data.error || 'Update the app'}`, 12, MUTED)
 } else if (family === 'small') {
   // Title says what the dial is: Needs + Wants in one tank, fuel left this week
