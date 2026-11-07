@@ -1,11 +1,11 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { loadRunway } from '@/lib/data'
 import { summary } from '@/lib/runway'
 import Rings from '@/components/Rings'
 import MoodChip from '@/components/MoodChip'
+import FaceIdUnlock from '@/components/FaceIdUnlock'
 
 // App lock screen: rings and mood only, amounts hidden until unlock
 export default function LockedPage() {
@@ -21,12 +21,9 @@ export default function LockedPage() {
         <path d='M6 20V12a6 6 0 0 1 6-6h8M44 6h8a6 6 0 0 1 6 6v8M58 44v8a6 6 0 0 1-6 6h-8M20 58h-8a6 6 0 0 1-6-6v-8' />
         <path d='M22 24v5M42 24v5M32 24v12h-3M23 44c5 4 13 4 18 0' />
       </svg>
-      <Link href='/dashboard' className='mt-6 w-full rounded-2xl bg-blue py-4 font-semibold text-[#0B0D12]'>
-        Unlock with Face ID
-      </Link>
-      <Link href='/dashboard' className='mt-5 font-semibold'>
-        Use passcode
-      </Link>
+      <Suspense fallback={<div className='mt-6 h-14 w-full animate-pulse rounded-2xl bg-card' />}>
+        <Unlock />
+      </Suspense>
     </main>
   )
 }
@@ -44,4 +41,12 @@ async function LockedStatus() {
       {s && <MoodChip mood={s.mood} label={`${s.mood} today`} />}
     </div>
   )
+}
+
+// Face ID needs the user id to tie the credential to this account
+async function Unlock() {
+  const supabase = await createClient()
+  const { data: auth } = await supabase.auth.getClaims()
+  if (!auth?.claims) redirect('/login')
+  return <FaceIdUnlock userId={auth.claims.sub} />
 }

@@ -11,13 +11,18 @@ import AddActions from '@/components/AddActions'
 import LoadDemoButton from '@/components/LoadDemoButton'
 import Flame from '@/components/Flame'
 import BudgetCard from '@/components/BudgetCard'
+import LockGate from '@/components/LockGate'
+import LockButton from '@/components/LockButton'
 
 export default function DashboardPage() {
   return (
     <main className='mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[420px] flex-col px-5 py-6'>
-      <Suspense fallback={<TodaySkeleton />}>
-        <Today />
-      </Suspense>
+      {/* Opened fresh? Show the Face ID lock first */}
+      <LockGate fallback={<TodaySkeleton />}>
+        <Suspense fallback={<TodaySkeleton />}>
+          <Today />
+        </Suspense>
+      </LockGate>
     </main>
   )
 }
@@ -61,7 +66,10 @@ async function Today() {
           <p className='text-sm text-muted'>{date}</p>
           <h1 className='font-display text-4xl font-bold'>Runway</h1>
         </div>
-        <MoodChip mood={s.mood} />
+        <div className='flex items-center gap-2'>
+          <MoodChip mood={s.mood} />
+          <LockButton />
+        </div>
       </header>
 
       <section className='flex items-center gap-5'>
