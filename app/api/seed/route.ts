@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-// [daysAgo, amount, kind, category, note]: ~£73.50 of spend over 7 days = £10.50/day
+// [daysAgo, amount, kind, category, note]: £73.50 over the 7 days before today = £10.50/day pace
 const DEMO: [number, number, string, string | null, string][] = [
   [0, 3.85, 'spend', 'food', 'Tesco meal deal'],
   [0, 2.0, 'spend', 'transport', 'Bus to campus'],
@@ -16,6 +16,8 @@ const DEMO: [number, number, string, string | null, string][] = [
   [5, 9.8, 'spend', 'going_out', 'Spoons'],
   [5, 6.5, 'spend', 'transport', 'Uber home'],
   [6, 2.2, 'spend', 'course', 'Printing'],
+  [7, 3.85, 'spend', 'food', 'Tesco meal deal'],
+  [7, 2.0, 'spend', 'transport', 'Bus to campus'],
 ]
 
 // POST /api/seed: resets the logged-in user's data to the demo state
@@ -26,14 +28,15 @@ export async function POST() {
   const user_id = data.claims.sub
 
   const now = Date.now()
+  const midnight = new Date().setHours(0, 0, 0, 0)
   const rows = DEMO.map(([daysAgo, amount, kind, category, note], i) => ({
     user_id,
     amount,
     kind,
     category,
     note,
-    // Today's rows a few minutes ago so they stay "today" even just after midnight
-    created_at: new Date(now - daysAgo * 86400000 - (daysAgo ? 3600000 : 60000) - i * 1000).toISOString(),
+    // Past rows at noon on their day (inside the 7-day pace window); today's a minute ago
+    created_at: new Date(daysAgo ? midnight - daysAgo * 86400000 + 43200000 + i * 1000 : now - 60000 - i * 1000).toISOString(),
   }))
 
   const results = await Promise.all([

@@ -75,8 +75,14 @@ export function spendable(profile: Profile) {
   return Number(profile.pot) - Number(profile.essentials_remaining)
 }
 
+// Pace from the 7 full days before today, so a spend today costs only its own amount in runway
 export function avgDailySpend(transactions: Transaction[], now = new Date()) {
-  return Math.max(1, sum(spends(inLastDays(transactions, 7, now))) / 7)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const window = spends(transactions).filter((t) => {
+    const at = new Date(t.created_at).getTime()
+    return at < today && at >= today - 7 * DAY
+  })
+  return Math.max(1, sum(window) / 7)
 }
 
 export function runwayDays(profile: Profile, transactions: Transaction[], now = new Date()) {
