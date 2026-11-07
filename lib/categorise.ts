@@ -41,15 +41,26 @@ bills: rent, energy, phone, internet, subscriptions (Spotify, Netflix)
 shopping: clothes, online shopping, electronics (Primark, ASOS, Amazon)
 other: anything else`
 
-// Qwen via a local Ollama. The JSON schema enum forces a valid category.
-// shortcut: Ollama runs on a laptop, so the Vercel deploy can't reach it and falls back to 'other'. Upgrade: hosted model.
-async function askQwen(merchant: string): Promise<string | null> {
+// Base URL of Ollama's native API, read per request (never at build time).
+// Accepts 'https://x.trycloudflare.com', with a trailing slash, or with /v1 or /api on the end.
+export function ollamaConfig() {
+  const raw = process.env.OLLAMA_URL?.trim() || 'http://localhost:11434'
+  const base = raw.replace(/\/+$/, '').replace(/\/(v1|api)$/, '')
+  return { base, model: process.env.OLLAMA_MODEL?.trim() || 'qwen2.5:1.5b' }
+}
+
+// Qwen via Ollama (local, or through a tunnel). The JSON schema enum forces a valid category.
+// 8s timeout for the tunnel; a refused connection fails instantly. Either way the caller falls back to 'other'.
+export async function askQwen(merchant: string): Promise<{ category: string | null; error?: string }> {
+  const { base, model } = ollamaConfig()
   try {
-    const res = await fetch(`${process.env.OLLAMA_URL ?? 'http://localhost:11434'}/api/chat`, {
+    const res = await fetch(`${base}/api/chat`, {
       method: 'POST',
-      signal: AbortSignal.timeout(5000),
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(8000),
+      cache: 'no-store',
       body: JSON.stringify({
-        model: process.env.OLLAMA_MODEL ?? 'qwen2.5:1.5b',
+        model,
         stream: false,
         options: { temperature: 0 },
         format: { type: 'object', properties: { category: { type: 'string', enum: CATEGORIES } }, required: ['category'] },
@@ -59,11 +70,12 @@ async function askQwen(merchant: string): Promise<string | null> {
         ],
       }),
     })
-    if (!res.ok) return null
+    if (!res.ok) return { category: null, error: `Ollama HTTP ${res.status}` }
     const category = JSON.parse((await res.json()).message?.content ?? '{}').category
-    return CATEGORIES.includes(category) ? category : null
-  } catch {
-    return null // Ollama not running, timed out, or bad JSON
+    return CATEGORIES.includes(category) ? { category } : { category: null, error: 'Unexpected reply' }
+  } catch (err) {
+    const name = err instanceof Error ? err.name : ''
+    return { category: null, error: name === 'TimeoutError' ? 'Timed out after 8s' : 'Could not reach Ollama' }
   }
 }
 
@@ -83,6 +95,7 @@ export async function categorise(supabase: SupabaseClient, user_id: string, rawM
   if (hit) return { category: hit[1], source: 'map' }
 
   const ai = await askQwen(merchant)
-  if (ai) return { category: ai, source: 'ai' }
+  if (ai.category) return { category: ai.category, source: 'ai' }
+  console.error('Qwen unavailable:', ai.error)
   return { category: 'other', source: 'fallback' }
 }
