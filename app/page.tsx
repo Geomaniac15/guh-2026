@@ -16,7 +16,7 @@ export default function Home() {
             Your loan, counted in days
           </h1>
           <p className='text-lg text-muted'>
-            Student money arrives in lumps, so Runway measures it in days: how long yours lasts until your next
+            Student money arrives in lumps, so Odo measures it in days of range: how long yours lasts until your next
             instalment.
           </p>
         </div>

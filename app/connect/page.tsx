@@ -49,7 +49,7 @@ async function BankStatus() {
           </div>
         </div>
         <p className='text-sm text-muted'>
-          Runway reads your bank feed and sorts each payment into a category, so you never log a spend by hand. Fix a
+          Odo reads your bank feed and sorts each payment into a category, so you never log a spend by hand. Fix a
           category once and it remembers that shop.
         </p>
         <ConnectButton connected={!!since} />

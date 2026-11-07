@@ -1,5 +1,5 @@
 /* global Request, ListWidget, DrawContext, Size, Color, Path, Point, Rect, Font, SFSymbol, Script, config */
-// Runway home screen widget for the Scriptable iOS app. Fuel gauges, range and mood, never pounds.
+// Odo home screen widget for the Scriptable iOS app. Fuel gauges, range and mood, never pounds.
 // Setup: paste into a new Scriptable script, fill in APP and KEY, then add a Scriptable widget
 // (small, medium or large) to the home screen and pick this script.
 
@@ -107,19 +107,94 @@ function cluster(g, width) {
   return ctx.getImage()
 }
 
-// Car-to-flag range line: lime as far as the money lasts, pink dashes for the gap
-function road(range, width) {
-  const ctx = canvas(width, 22)
-  const x0 = 8
-  const x1 = width - 10
+// Road to loan day, same drawing as components/LoanRoad.tsx (300x60): grey road, car at today,
+// road block where fuel runs out, dimmed road past it, flag at loan day
+function road(range) {
+  const ctx = canvas(300, 60)
+  const start = 4
+  const end = 272
   const reach = range.untilLoan > 0 ? Math.min(1, range.runwayDays / range.untilLoan) : 1
-  const end = x0 + (x1 - x0) * reach
-  line(ctx, new Point(x0, 14), new Point(end, 14), '#B8F25C', 4)
-  for (let x = end + 5; x < x1; x += 9) line(ctx, new Point(x, 14), new Point(Math.min(x + 4, x1), 14), PINK, 4)
-  line(ctx, new Point(x1 + 2, 20), new Point(x1 + 2, 2), WHITE, 2)
+  const block = start + (end - start) * reach
+  const rounded = (x, w, colour) => {
+    const p = new Path()
+    p.addRoundedRect(new Rect(x, 34, w, 14), 5, 5)
+    ctx.addPath(p)
+    ctx.setFillColor(new Color(colour))
+    ctx.fillPath()
+  }
+  rounded(start, end - start, '#2B2F38')
+  if (reach < 1) rounded(block, end - block, '#1A1D23')
+  for (let x = 44; x < block - 8; x += 13) line(ctx, new Point(x, 41), new Point(Math.min(x + 7, block - 8), 41), '#8A93A3', 1.6)
+  // Car
+  ctx.setFillColor(new Color('#A9C1E8'))
+  const body = new Path()
+  body.addRoundedRect(new Rect(10, 28, 33, 8), 3, 3)
+  body.addRoundedRect(new Rect(17, 20.5, 19, 9), 3, 3)
+  ctx.addPath(body)
+  ctx.fillPath()
+  for (const x of [18, 35]) {
+    ctx.setFillColor(new Color('#14161B'))
+    ctx.fillEllipse(new Rect(x - 3.6, 31.4, 7.2, 7.2))
+  }
+  // Road block
+  if (reach < 1) {
+    const x = block - 10
+    line(ctx, new Point(x + 4, 30), new Point(x + 2, 52), '#C9CED8', 1.6)
+    line(ctx, new Point(x + 16, 30), new Point(x + 18, 52), '#C9CED8', 1.6)
+    ctx.setFillColor(new Color(WHITE))
+    ctx.fillRect(new Rect(x, 25, 20, 7))
+    ctx.setFillColor(new Color('#F08F86'))
+    for (let k = 0; k < 4; k++) {
+      const stripe = new Path()
+      stripe.addLines([new Point(x + k * 5 + 1, 32), new Point(x + k * 5 + 4, 25), new Point(x + k * 5 + 6.5, 25), new Point(x + k * 5 + 3.5, 32)])
+      stripe.closeSubpath()
+      ctx.addPath(stripe)
+      ctx.fillPath()
+    }
+    ctx.setFillColor(new Color('#F5B94A'))
+    ctx.fillEllipse(new Rect(x + 7.6, 19.1, 4.8, 4.8))
+  }
+  // Flag
+  line(ctx, new Point(286, 8), new Point(286, 40), WHITE, 1.8)
   ctx.setFillColor(new Color(WHITE))
-  ctx.fillRect(new Rect(x1 + 3, 2, 7, 5))
+  ctx.fillRect(new Rect(287, 8, 10, 7))
+  ctx.setFillColor(new Color('#0B0D12'))
+  for (const [fx, fy] of [[287, 8], [293.6, 8], [290.3, 11.5]]) ctx.fillRect(new Rect(fx, fy, 3.3, 3.5))
   return ctx.getImage()
+}
+
+// Savings as a fuel can that fills up (no clipping in Scriptable, so the fill is a rectangle inside the body)
+function jerryCan(fill, h) {
+  const ctx = canvas(44, 50)
+  const f = Math.max(0, Math.min(1, fill))
+  line(ctx, new Point(11, 12), new Point(11, 6), '#4A5160', 3)
+  line(ctx, new Point(11, 6), new Point(23, 6), '#4A5160', 3)
+  line(ctx, new Point(23, 6), new Point(23, 12), '#4A5160', 3)
+  line(ctx, new Point(31, 13), new Point(38, 3), '#4A5160', 3)
+  const body = new Path()
+  body.addRoundedRect(new Rect(4, 12, 32, 36), 5, 5)
+  ctx.addPath(body)
+  ctx.setFillColor(new Color('#262B36'))
+  ctx.fillPath()
+  ctx.setFillColor(new Color('#B8F25C'))
+  ctx.fillRect(new Rect(5.5, 13.5 + 33 * (1 - f), 29, 33 * f))
+  ctx.addPath(body)
+  ctx.setStrokeColor(new Color('#4A5160'))
+  ctx.setLineWidth(2)
+  ctx.strokePath()
+  const img = ctx.getImage()
+  return { img, size: new Size((h * 44) / 50, h) }
+}
+
+function savings(parent, fill, h) {
+  const col = parent.addStack()
+  col.layoutVertically()
+  col.centerAlignContent()
+  const can = jerryCan(fill, h)
+  col.addImage(can.img).imageSize = can.size
+  col.addSpacer(2)
+  text(col, `${Math.round(fill * 100)}%`, 12, WHITE, true)
+  text(col, 'Savings', 10, MUTED)
 }
 
 function text(parent, value, size, colour, bold) {
@@ -147,21 +222,6 @@ function streak(parent, n) {
   text(s, String(n), 13, '#FF8A3D', true)
 }
 
-function savingsBar(parent, fill) {
-  const row = parent.addStack()
-  row.centerAlignContent()
-  text(row, 'Savings', 12, MUTED)
-  row.addSpacer(8)
-  const ctx = canvas(150, 8)
-  ctx.setFillColor(new Color('#262B36'))
-  ctx.fillRect(new Rect(0, 0, 150, 8))
-  ctx.setFillColor(new Color('#B8F25C'))
-  ctx.fillRect(new Rect(0, 0, 150 * Math.min(1, fill), 8))
-  row.addImage(ctx.getImage()).imageSize = new Size(150, 8)
-  row.addSpacer()
-  text(row, `${Math.round(fill * 100)}%`, 12, WHITE, true)
-}
-
 const data = await load()
 const w = new ListWidget()
 w.backgroundColor = new Color('#0B0D12')
@@ -171,7 +231,7 @@ w.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000)
 const family = config.widgetFamily || 'medium'
 
 if (data.error || !data.gauges) {
-  text(w, `Runway unavailable\n${data.error || 'Update the app'}`, 12, MUTED)
+  text(w, `Odo unavailable\n${data.error || 'Update the app'}`, 12, MUTED)
 } else if (family === 'small') {
   const top = w.addStack()
   top.addSpacer()
@@ -182,16 +242,18 @@ if (data.error || !data.gauges) {
   chip(bottom, data.mood)
   bottom.addSpacer()
 } else {
-  const range = { runwayDays: data.runwayDays, untilLoan: data.daysUntilLoan }
+  const short = Math.round(data.shortfallDays || 0)
   if (family === 'large') {
     const head = w.addStack()
-    text(head, 'Runway', 15, WHITE, true)
-    head.addSpacer()
-    const short = Math.round(data.shortfallDays || 0)
-    text(head, short > 0 ? `${Math.round(data.runwayDays)} days · ${short} short` : `${Math.round(data.runwayDays)} days of range`, 12, short > 0 ? PINK : MUTED)
-    w.addSpacer(6)
-    w.addImage(road(range, 300)).imageSize = new Size(300, 22)
-    w.addSpacer(14)
+    head.layoutVertically()
+    text(head, 'Range', 12, MUTED)
+    const row = head.addStack()
+    row.bottomAlignContent()
+    text(row, `${Math.round(data.runwayDays)} days`, 22, WHITE, true)
+    row.addSpacer()
+    text(row, short > 0 ? `${short} days short` : `${-short} days to spare`, 12, short > 0 ? PINK : '#B8F25C')
+    w.addImage(road({ runwayDays: data.runwayDays, untilLoan: data.daysUntilLoan })).imageSize = new Size(300, 60)
+    w.addSpacer(8)
   }
   const head = w.addStack()
   head.centerAlignContent()
@@ -199,9 +261,13 @@ if (data.error || !data.gauges) {
   head.addSpacer()
   streak(head, data.streak)
   w.addSpacer(4)
-  w.addImage(cluster(data.gauges, 300)).imageSize = new Size(300, 126)
-  w.addSpacer(6)
-  savingsBar(w, data.gauges.savings)
+  // Gauges on the left, jerry can on the right
+  const row = w.addStack()
+  row.centerAlignContent()
+  const width = family === 'large' ? 240 : 225
+  row.addImage(cluster(data.gauges, width)).imageSize = new Size(width, width * 0.42)
+  row.addSpacer()
+  savings(row, data.gauges.savings, family === 'large' ? 52 : 42)
   if (family === 'large') {
     w.addSpacer(10)
     text(w, data.nudge, 13, WHITE)

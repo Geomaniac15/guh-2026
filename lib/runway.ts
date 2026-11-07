@@ -248,7 +248,7 @@ export function gauges(profile: Profile, transactions: Transaction[], now = new 
     wants: reading(wantsSpent, wantsBudget),
     total: reading(needsSpent + wantsSpent, needsBudget + wantsBudget),
     category: { ...reading(sum(weekSpends.filter((t) => t.category === category)), limit), category, label: CATEGORY_LABELS[category], limit },
-    savings: { fill: clamp(saved / target), target },
+    savings: { fill: clamp(saved / target), target, saved },
   }
 }
 
@@ -303,6 +303,6 @@ export function transactionImpact(tx: Transaction, profile: Profile, transaction
 export function impactText(i: Impact) {
   if (i.type === 'saving') return 'Moved to savings'
   if (i.type === 'covered') return 'Covered by your essentials'
-  if (i.type === 'gain') return `+${i.days.toFixed(1)} days of runway`
-  return `Cost ${i.days.toFixed(1)} days of runway`
+  if (i.type === 'gain') return `+${i.days.toFixed(1)} days of range`
+  return `Cost ${i.days.toFixed(1)} days of range`
 }

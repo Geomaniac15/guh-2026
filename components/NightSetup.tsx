@@ -42,7 +42,7 @@ export default function NightSetup({ avgDaily }: { avgDaily: number }) {
           />
         </label>
         <p className='mt-3 text-sm text-muted'>
-          Costs {days.toFixed(1)} days of runway
+          Costs {days.toFixed(1)} days of range
         </p>
       </div>
 

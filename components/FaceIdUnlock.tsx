@@ -16,7 +16,7 @@ const challenge = () => crypto.getRandomValues(new Uint8Array(32))
 function message(err: unknown) {
   const name = err instanceof DOMException ? err.name : ''
   if (name === 'NotAllowedError') return "Face ID was cancelled or didn't match. Try again, or use your passcode."
-  if (name === 'InvalidStateError') return 'Face ID is already set up for Runway on this device.'
+  if (name === 'InvalidStateError') return 'Face ID is already set up for Odo on this device.'
   if (name === 'SecurityError') return 'Face ID needs a secure (https) connection.'
   return 'Face ID failed. Try again, or use your passcode.'
 }
@@ -57,8 +57,8 @@ export default function FaceIdUnlock({ userId }: { userId: string }) {
       const cred = (await navigator.credentials.create({
         publicKey: {
           challenge: challenge(),
-          rp: { id: window.location.hostname, name: 'Runway' },
-          user: { id: new TextEncoder().encode(userId), name: 'Runway app lock', displayName: 'Runway' },
+          rp: { id: window.location.hostname, name: 'Odo' },
+          user: { id: new TextEncoder().encode(userId), name: 'Odo app lock', displayName: 'Odo' },
           pubKeyCredParams: [
             { type: 'public-key', alg: -7 },
             { type: 'public-key', alg: -257 },

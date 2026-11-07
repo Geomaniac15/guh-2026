@@ -14,7 +14,7 @@ export default function LockedPage() {
       <Suspense fallback={<div className='size-[170px] animate-pulse rounded-full bg-card' />}>
         <LockedStatus />
       </Suspense>
-      <h1 className='mt-8 font-display text-4xl font-bold'>Runway is locked</h1>
+      <h1 className='mt-8 font-display text-4xl font-bold'>Odo is locked</h1>
       <p className='mt-4 text-muted'>Your amounts, transactions and league are hidden until you unlock.</p>
 
       <svg className='mt-auto' width='84' height='84' viewBox='0 0 64 64' fill='none' stroke='#F4F5F7' strokeWidth='3' strokeLinecap='round' aria-hidden>

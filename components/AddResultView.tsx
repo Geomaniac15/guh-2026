@@ -1,13 +1,13 @@
 'use client'
 
 import type { AddResult } from '@/app/dashboard/actions'
-import RangeCard from '@/components/RangeCard'
+import RangeWidget from '@/components/RangeWidget'
 import { CATEGORY_LABELS, gbp } from '@/lib/runway'
 
 // category/ai are set for bank feed transactions
 type Props = { result: Exclude<AddResult, { error: string }> & { category?: string; ai?: boolean }; onDone: () => void }
 
-// "+3.2 days of runway" / "That cost 1.4 days" screen shown after logging
+// "+3.2 days of range" / "That cost 1.4 days" screen shown after logging
 export default function AddResultView({ result, onDone }: Props) {
   const { kind, amount, note, days, covered, before, after, untilLoan, now } = result
   const shift = kind === 'shift'
@@ -44,7 +44,7 @@ export default function AddResultView({ result, onDone }: Props) {
             That cost <span className='text-6xl font-bold text-orange'>{days.toFixed(1)}</span>
           </p>
         )}
-        {!covered && <p className='mt-2 text-lg font-medium'>days of runway</p>}
+        {!covered && <p className='mt-2 text-lg font-medium'>days of range</p>}
       </div>
 
       <div className='flex items-center justify-center gap-6 text-center'>
@@ -61,7 +61,7 @@ export default function AddResultView({ result, onDone }: Props) {
         </div>
       </div>
 
-      <RangeCard runway={after.runway} untilLoan={untilLoan} now={now} />
+      <RangeWidget size='medium' runway={after.runway} untilLoan={untilLoan} now={now} />
 
       <div className={`rounded-2xl p-4 text-sm ${up ? 'bg-lime/10 text-lime' : 'bg-orange/10 text-orange'}`}>
         {Math.abs(after.allowance - before.allowance) < 0.005

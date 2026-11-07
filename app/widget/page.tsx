@@ -7,8 +7,8 @@ import { summary } from '@/lib/runway'
 import GaugeCluster from '@/components/GaugeCluster'
 import GaugeTile from '@/components/GaugeTile'
 import JerryCan from '@/components/JerryCan'
-import RangeCard from '@/components/RangeCard'
-import RangeRoad from '@/components/RangeRoad'
+import RangeWidget from '@/components/RangeWidget'
+import LoanRoad from '@/components/LoanRoad'
 import LoadDemoButton from '@/components/LoadDemoButton'
 
 // Widget gallery: five small widgets plus the combined medium and large. Gauges and days only, never pounds.
@@ -47,10 +47,27 @@ async function Widgets() {
   return (
     <div className='space-y-8'>
       <section className='space-y-3'>
-        <h2 className='text-xs font-semibold uppercase tracking-wider text-muted'>Five widgets</h2>
+        <h2 className='text-xs font-semibold uppercase tracking-wider text-muted'>Range to loan day</h2>
+        <div className='grid grid-cols-2 gap-3'>
+          <Link href='/dashboard'>
+            <RangeWidget size='small' runway={s.runway} untilLoan={s.untilLoan} now={now} />
+          </Link>
+        </div>
         <Link href='/dashboard' className='block'>
-          <RangeCard runway={s.runway} untilLoan={s.untilLoan} now={now} />
+          <RangeWidget size='medium' runway={s.runway} untilLoan={s.untilLoan} now={now} />
         </Link>
+        <Link href='/dashboard' className='block'>
+          <RangeWidget size='large' runway={s.runway} untilLoan={s.untilLoan} now={now} />
+        </Link>
+        <p className='text-xs text-muted'>
+          Grey road is the time until loan day. The road block is where your fuel runs out at your usual pace; the
+          dimmed road past it is the stretch you can&apos;t reach yet. The car only moves with the calendar: spending
+          moves the block closer, saving and shifts push it further away.
+        </p>
+      </section>
+
+      <section className='space-y-3'>
+        <h2 className='text-xs font-semibold uppercase tracking-wider text-muted'>Gauges</h2>
         <div className='grid grid-cols-2 gap-3'>
           <Link href='/dashboard'>
             <GaugeTile name='Needs' reading={g.needs} colour='#4DA3FF' />
@@ -72,27 +89,27 @@ async function Widgets() {
             <span className='text-center text-xs text-muted'>Fills as you save</span>
           </Link>
         </div>
-        <p className='text-center text-sm text-muted'>Tap any widget to open Runway</p>
+        <p className='text-center text-sm text-muted'>Tap any widget to open Odo</p>
       </section>
 
       <section className='space-y-3'>
-        <h2 className='text-xs font-semibold uppercase tracking-wider text-muted'>Medium</h2>
+        <h2 className='text-xs font-semibold uppercase tracking-wider text-muted'>Combined · medium</h2>
         <Link href='/dashboard' className='block rounded-[22px] bg-card px-4 pb-4 pt-5'>
           <GaugeCluster g={g} compact />
         </Link>
       </section>
 
       <section className='space-y-3'>
-        <h2 className='text-xs font-semibold uppercase tracking-wider text-muted'>Large</h2>
+        <h2 className='text-xs font-semibold uppercase tracking-wider text-muted'>Combined · large</h2>
         <Link href='/dashboard' className='block divide-y divide-line overflow-hidden rounded-[22px] bg-card'>
           <div className='space-y-2 p-4'>
             <div className='flex items-baseline justify-between'>
-              <span className='font-semibold'>Runway</span>
+              <span className='font-semibold'>Range</span>
               <span className='text-xs text-muted'>
                 {Math.round(s.runway)} days of range · {s.untilLoan} days to loan
               </span>
             </div>
-            <RangeRoad runway={s.runway} untilLoan={s.untilLoan} />
+            <LoanRoad reach={s.untilLoan > 0 ? s.runway / s.untilLoan : 1} />
           </div>
           <div className='px-4 pb-4 pt-5'>
             <GaugeCluster g={g} />

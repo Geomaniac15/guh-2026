@@ -6,7 +6,7 @@ import { CATEGORY_LABELS, gbp, summary, transactionImpact, type Profile } from '
 import { loadRunway } from '@/lib/data'
 import GaugeCluster from '@/components/GaugeCluster'
 import MoodChip from '@/components/MoodChip'
-import RangeCard from '@/components/RangeCard'
+import RangeWidget from '@/components/RangeWidget'
 import LoadDemoButton from '@/components/LoadDemoButton'
 import Flame from '@/components/Flame'
 import BudgetCard from '@/components/BudgetCard'
@@ -38,7 +38,7 @@ async function Today() {
   if (error) {
     return (
       <div className='space-y-4 rounded-2xl bg-card p-5'>
-        <p className='font-semibold text-pink'>Could not load your runway</p>
+        <p className='font-semibold text-pink'>Could not load your range</p>
         <p className='text-sm text-muted'>{error.message}. Has supabase/schema.sql been run?</p>
       </div>
     )
@@ -47,7 +47,7 @@ async function Today() {
   if (!profile) {
     return (
       <div className='flex flex-1 flex-col justify-center gap-4 text-center'>
-        <h1 className='font-display text-4xl font-bold'>Runway</h1>
+        <h1 className='font-display text-4xl font-bold'>Odo</h1>
         <p className='text-muted'>No money set up yet. Load the demo student to see how it works.</p>
         <div className='mx-auto'>
           <LoadDemoButton />
@@ -65,7 +65,7 @@ async function Today() {
       <header className='flex items-end justify-between'>
         <div>
           <p className='text-sm text-muted'>{date}</p>
-          <h1 className='font-display text-4xl font-bold'>Runway</h1>
+          <h1 className='font-display text-4xl font-bold'>Odo</h1>
         </div>
         <div className='flex items-center gap-2'>
           <MoodChip mood={s.mood} />
@@ -74,10 +74,16 @@ async function Today() {
       </header>
 
       <Link href='/rings' aria-label='Your gauges: tap to customise' className='block rounded-2xl bg-card px-4 pb-4 pt-5'>
-        <GaugeCluster g={s.gauges} />
+        <GaugeCluster g={s.gauges} amounts />
       </Link>
 
-      <RangeCard runway={s.runway} untilLoan={s.untilLoan} now={now.getTime()} />
+      <RangeWidget
+        size='large'
+        runway={s.runway}
+        untilLoan={s.untilLoan}
+        now={now.getTime()}
+        gapPerWeek={(s.shortfall * (s.budget.mu / 7)) / s.budget.weeks}
+      />
 
       <div className='grid grid-cols-2 gap-3'>
         <Stat label="Today's allowance" value={gbp(s.allowance)} />

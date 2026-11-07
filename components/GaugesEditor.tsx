@@ -40,7 +40,7 @@ export default function GaugesEditor({ profile, transactions, now }: Props) {
   return (
     <div className='flex flex-1 flex-col gap-5'>
       <div className='rounded-2xl bg-card px-4 pb-4 pt-5'>
-        <GaugeCluster g={g} />
+        <GaugeCluster g={g} amounts />
       </div>
       <p className='text-sm text-muted'>
         Each needle is the fuel left this week. The triangle is where it should be today if you spread spending evenly:
@@ -50,7 +50,7 @@ export default function GaugesEditor({ profile, transactions, now }: Props) {
       <section className='space-y-3'>
         <h2 className='text-xs font-semibold uppercase tracking-wider text-muted'>Your fourth gauge</h2>
         <div className='grid grid-cols-[1fr_1.2fr] gap-3'>
-          <GaugeTile name={g.category.label} reading={g.category} colour='#FF6B8A' />
+          <GaugeTile name={g.category.label} reading={g.category} colour='#FF6B8A' amounts />
           <div className='flex flex-col gap-2'>
             <label className='block space-y-1 text-sm text-muted'>
               <span>Weekly limit (£)</span>

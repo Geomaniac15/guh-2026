@@ -37,7 +37,7 @@ body:has(#tabbar) {
   --tabbar-h: calc(57px + env(safe-area-inset-bottom));
 }
 
-/* Full-height page column minus the navbar and, when shown, the tab bar */
+/* Full-height page column minus the tab bar when it's shown */
 .page-min-h {
-  min-height: calc(100dvh - 49px - var(--tabbar-h, 0px));
+  min-height: calc(100dvh - var(--tabbar-h, 0px));
 }

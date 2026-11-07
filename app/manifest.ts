@@ -1,10 +1,10 @@
 import type { MetadataRoute } from 'next'
 
-// Web app manifest: "Add to Home Screen" opens Runway full screen
+// Web app manifest: "Add to Home Screen" opens Odo full screen
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Runway',
-    short_name: 'Runway',
+    name: 'Odo',
+    short_name: 'Odo',
     description: 'Your loan, counted in days',
     start_url: '/dashboard',
     display: 'standalone',
