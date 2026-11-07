@@ -293,3 +293,27 @@ export function nudge(s: Summary) {
   if (s.spentToday > s.allowance) return "Over today's budget. Tomorrow's allowance has been lowered a little."
   return 'Running short of your loan. A shift or two would close the gap.'
 }
+
+export type Impact = { type: 'cost' | 'gain' | 'covered' | 'saving'; days: number }
+
+// What a transaction does to runway, at your usual pace.
+// Wants spends cost amount / pace. Needs come out of essentials (no runway change while essentials remain).
+// Shift pay replaces expected shift income, so only the part not already counted (1 − α) is new runway.
+export function transactionImpact(tx: Transaction, profile: Profile, transactions: Transaction[], now = new Date()): Impact {
+  const pace = avgDailySpend(transactions, now)
+  const amount = Number(tx.amount)
+  if (tx.kind === 'saving') return { type: 'saving', days: 0 }
+  if (tx.kind === 'shift') {
+    const { alpha } = budgetBreakdown(profile, transactions, now)
+    return { type: 'gain', days: round1((amount * (1 - alpha)) / pace) }
+  }
+  if (CATEGORY_GROUP[tx.category ?? ''] === 'needs' && Number(profile.essentials_remaining) > 0) return { type: 'covered', days: 0 }
+  return { type: 'cost', days: round1(amount / pace) }
+}
+
+export function impactText(i: Impact) {
+  if (i.type === 'saving') return 'Moved to savings'
+  if (i.type === 'covered') return 'Covered by your essentials'
+  if (i.type === 'gain') return `+${i.days.toFixed(1)} days of runway`
+  return `Cost ${i.days.toFixed(1)} days of runway`
+}

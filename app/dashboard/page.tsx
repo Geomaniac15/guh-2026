@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { CATEGORY_LABELS, gbp, summary } from '@/lib/runway'
+import { CATEGORY_LABELS, gbp, summary, transactionImpact, type Profile } from '@/lib/runway'
 import { loadRunway } from '@/lib/data'
 import Rings from '@/components/Rings'
 import MoodChip from '@/components/MoodChip'
@@ -13,6 +13,7 @@ import BudgetCard from '@/components/BudgetCard'
 import LockGate from '@/components/LockGate'
 import DashboardMenu from '@/components/DashboardMenu'
 import TransactionList, { type TxRow } from '@/components/TransactionList'
+import BankFeed from '@/components/BankFeed'
 
 export default function DashboardPage() {
   return (
@@ -97,13 +98,14 @@ async function Today() {
         {profile.streak}-day streak · amounts hidden on widgets
       </p>
 
-      <TransactionList rows={latest(transactions, now)} />
+      <BankFeed connected={!!profile.bank_connected_at} />
+      <TransactionList rows={latest(profile, transactions, now)} />
     </div>
   )
 }
 
 // Latest 10 for the list, with display text worked out on the server (UK time)
-function latest(transactions: Awaited<ReturnType<typeof loadRunway>>['transactions'], now: Date): TxRow[] {
+function latest(profile: Profile, transactions: Awaited<ReturnType<typeof loadRunway>>['transactions'], now: Date): TxRow[] {
   const uk = { timeZone: 'Europe/London' } as const
   const today = now.toLocaleDateString('en-GB', uk)
   return [...transactions]
@@ -121,7 +123,10 @@ function latest(transactions: Awaited<ReturnType<typeof loadRunway>>['transactio
           at.toLocaleDateString('en-GB', uk) === today
             ? `Today ${at.toLocaleTimeString('en-GB', { ...uk, hour: '2-digit', minute: '2-digit' })}`
             : at.toLocaleDateString('en-GB', { ...uk, weekday: 'short', day: 'numeric', month: 'short' }),
+        fullWhen: at.toLocaleString('en-GB', { ...uk, weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }),
+        source: t.source === 'bank' ? 'bank' : 'manual',
         ai: !!t.ai_categorised,
+        impact: transactionImpact(t, profile, transactions, now),
       }
     })
 }
