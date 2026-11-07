@@ -233,14 +233,22 @@ const family = config.widgetFamily || 'medium'
 if (data.error || !data.gauges) {
   text(w, `Odo unavailable\n${data.error || 'Update the app'}`, 12, MUTED)
 } else if (family === 'small') {
+  // Title says what the dial is: Needs + Wants in one tank, fuel left this week
   const top = w.addStack()
+  top.centerAlignContent()
+  const title = top.addStack()
+  title.layoutVertically()
+  text(title, 'Weekly fuel', 13, WHITE, true)
+  text(title, 'Needs + wants', 10, MUTED)
   top.addSpacer()
   streak(top, data.streak)
-  w.addImage(totalGauge(data.gauges, 120)).centerAlignImage()
+  w.addSpacer(2)
+  w.addImage(totalGauge(data.gauges, 104)).centerAlignImage()
   const bottom = w.addStack()
+  bottom.centerAlignContent()
+  text(bottom, `${Math.round(data.gauges.total.fill * 100)}% left`, 13, WHITE, true)
   bottom.addSpacer()
-  chip(bottom, data.mood)
-  bottom.addSpacer()
+  text(bottom, data.gauges.total.status, 11, data.gauges.total.status === 'Too fast' ? '#FF8A3D' : MUTED)
 } else {
   const short = Math.round(data.shortfallDays || 0)
   if (family === 'large') {
