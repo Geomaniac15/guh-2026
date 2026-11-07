@@ -60,6 +60,10 @@ export default function LoginPage() {
             Sign up
           </button>
         </div>
+        {/* Plain <a>: /demo signs in, so it must not be prefetched */}
+        <a href='/demo' className='block rounded-md bg-lime px-3 py-2 text-center font-semibold text-[#0B0D12]'>
+          Try the demo account
+        </a>
       </div>
     </main>
   )

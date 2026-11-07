@@ -23,9 +23,10 @@ export default function Home() {
       </div>
 
       <div className='space-y-3'>
-        <Link href='/dashboard' className='block rounded-2xl bg-lime py-4 text-center font-semibold text-[#0B0D12]'>
+        {/* Plain <a>: /demo signs in, so it must not be prefetched */}
+        <a href='/demo' className='block rounded-2xl bg-lime py-4 text-center font-semibold text-[#0B0D12]'>
           Try the demo
-        </Link>
+        </a>
         <Link href='/login' className='block rounded-2xl border border-line bg-card py-4 text-center font-semibold'>
           Log in
         </Link>
