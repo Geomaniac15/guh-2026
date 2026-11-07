@@ -29,3 +29,28 @@ export async function loadRunway(supabase: SupabaseClient, user_id: string) {
 
   return { profile, transactions, error: p.error ?? t.error }
 }
+
+export type NightOut = {
+  id: string
+  budget: number
+  taxi_reserve: number
+  spent: number
+  show_on_lock: boolean
+  started_at: string
+}
+
+// The user's current night out (not ended), if any
+export async function loadActiveNight(supabase: SupabaseClient, user_id: string) {
+  const { data, error } = await supabase
+    .from('night_outs')
+    .select('*')
+    .eq('user_id', user_id)
+    .is('ended_at', null)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle<NightOut>()
+  return { night: data, error }
+}
+
+// Share of tonight's budget left, 0–1. The taxi reserve is never part of it.
+export const nightFuel = (n: NightOut) => Math.max(0, Math.min(1, 1 - Number(n.spent) / Math.max(1, Number(n.budget))))

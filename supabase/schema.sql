@@ -72,3 +72,6 @@ alter table profiles add constraint profiles_budget_mode_check check (budget_mod
 -- Gradual change: budget_ref is the previous day's budget (the 12% anchor), last_budget_date stops more than one save a day
 alter table profiles add column if not exists budget_ref numeric;
 alter table profiles add column if not exists last_budget_date date;
+
+-- Migration (7 Nov): night out lock screen toggle. Run once.
+alter table night_outs add column if not exists show_on_lock boolean default true;
