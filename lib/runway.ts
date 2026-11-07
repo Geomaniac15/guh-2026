@@ -173,3 +173,11 @@ export function summary(profile: Profile, transactions: Transaction[], now = new
 }
 
 export type Summary = ReturnType<typeof summary>
+
+// One-line widget nudge. Never mentions pounds.
+export function nudge(s: Summary) {
+  if (s.mood === 'Comfortable') return 'Plenty left today. Nice one.'
+  if (s.mood === 'Careful') return "Most of today's budget is used. Cheap dinner tonight?"
+  if (s.spentToday > s.allowance) return "Over today's budget. Tomorrow's allowance has been lowered a little."
+  return 'Running short of your loan. A shift or two would close the gap.'
+}

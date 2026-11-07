@@ -7,6 +7,7 @@ import MoodChip from '@/components/MoodChip'
 import Timeline from '@/components/Timeline'
 import AddActions from '@/components/AddActions'
 import LoadDemoButton from '@/components/LoadDemoButton'
+import Flame from '@/components/Flame'
 
 export default function DashboardPage() {
   return (
@@ -82,9 +83,7 @@ async function Today() {
       </div>
 
       <p className='flex items-center gap-2 text-sm text-muted'>
-        <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#FF8A3D' strokeWidth='2.2' strokeLinejoin='round' aria-hidden>
-          <path d='M12 3c1 4 5 6 5 11a5 5 0 0 1-10 0c0-3 2-4 2-7 1.5 1 2 2 2.5 3.5C12.5 8 12 5.5 12 3z' />
-        </svg>
+        <Flame />
         {profile.streak}-day streak · amounts hidden on widgets
       </p>
 

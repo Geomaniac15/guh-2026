@@ -1,0 +1,47 @@
+import { Suspense } from 'react'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { loadRunway } from '@/lib/data'
+import { summary } from '@/lib/runway'
+import Rings from '@/components/Rings'
+import MoodChip from '@/components/MoodChip'
+
+// App lock screen: rings and mood only, amounts hidden until unlock
+export default function LockedPage() {
+  return (
+    <main className='mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[420px] flex-col items-center px-6 pb-10 pt-16 text-center'>
+      <Suspense fallback={<div className='size-[170px] animate-pulse rounded-full bg-card' />}>
+        <LockedStatus />
+      </Suspense>
+      <h1 className='mt-8 font-display text-4xl font-bold'>Runway is locked</h1>
+      <p className='mt-4 text-muted'>Your amounts, transactions and league are hidden until you unlock.</p>
+
+      <svg className='mt-auto' width='84' height='84' viewBox='0 0 64 64' fill='none' stroke='#F4F5F7' strokeWidth='3' strokeLinecap='round' aria-hidden>
+        <path d='M6 20V12a6 6 0 0 1 6-6h8M44 6h8a6 6 0 0 1 6 6v8M58 44v8a6 6 0 0 1-6 6h-8M20 58h-8a6 6 0 0 1-6-6v-8' />
+        <path d='M22 24v5M42 24v5M32 24v12h-3M23 44c5 4 13 4 18 0' />
+      </svg>
+      <Link href='/dashboard' className='mt-6 w-full rounded-2xl bg-blue py-4 font-semibold text-[#0B0D12]'>
+        Unlock with Face ID
+      </Link>
+      <Link href='/dashboard' className='mt-5 font-semibold'>
+        Use passcode
+      </Link>
+    </main>
+  )
+}
+
+// Rings + mood chip for the signed-in user (reads cookies, so it sits in <Suspense>)
+async function LockedStatus() {
+  const supabase = await createClient()
+  const { data: auth } = await supabase.auth.getClaims()
+  if (!auth?.claims) redirect('/login')
+  const { profile, transactions } = await loadRunway(supabase, auth.claims.sub)
+  const s = profile ? summary(profile, transactions) : null
+  return (
+    <div className='flex flex-col items-center gap-6'>
+      <Rings progress={s?.progress ?? [0, 0, 0]} size={170} />
+      {s && <MoodChip mood={s.mood} label={`${s.mood} today`} />}
+    </div>
+  )
+}
