@@ -57,8 +57,8 @@ create policy "own night_outs update" on night_outs for update using (user_id = 
 create policy "own night_outs delete" on night_outs for delete using (user_id = auth.uid());
 
 -- Migration (7 Nov): categories changed. If you already ran the file above, run only these lines.
+alter table transactions drop constraint if exists transactions_category_check;
 update transactions set category = 'bills' where category = 'needs';
 update transactions set category = 'other' where category = 'wants';
-alter table transactions drop constraint if exists transactions_category_check;
 alter table transactions add constraint transactions_category_check
   check (category in ('food', 'transport', 'course', 'bills', 'going_out', 'takeaways', 'shopping', 'other'));
