@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import Navbar from '@/components/Navbar'
@@ -9,7 +9,18 @@ const spaceGrotesk = Space_Grotesk({ variable: '--font-space', subsets: ['latin'
 
 export const metadata: Metadata = {
   title: 'Runway',
-  description: 'Student money, measured in days of runway',
+  description: 'Your loan, counted in days',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-touch-icon.png',
+  },
+  // iPhone "Add to Home Screen" opens full screen with a dark status bar
+  appleWebApp: { capable: true, title: 'Runway', statusBarStyle: 'black' },
+  other: { 'apple-mobile-web-app-capable': 'yes' },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0B0D12',
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
