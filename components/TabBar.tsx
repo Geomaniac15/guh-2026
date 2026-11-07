@@ -18,12 +18,12 @@ const TABS = [
   },
   {
     href: '/rings',
-    label: 'Rings',
+    label: 'Gauges',
     icon: (
       <svg {...icon}>
-        <path d='M4 7h10M18 7h2M4 17h4M12 17h8' />
-        <circle cx='16' cy='7' r='2' />
-        <circle cx='10' cy='17' r='2' />
+        <path d='M4.5 17a8 8 0 1 1 15 0' />
+        <path d='M12 14l4-5' />
+        <circle cx='12' cy='14' r='1.2' />
       </svg>
     ),
   },

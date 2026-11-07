@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { loadRunway } from '@/lib/data'
 import { summary } from '@/lib/runway'
-import Rings from '@/components/Rings'
+import Gauge from '@/components/Gauge'
 import MoodChip from '@/components/MoodChip'
 import FaceIdUnlock from '@/components/FaceIdUnlock'
 
@@ -28,7 +28,7 @@ export default function LockedPage() {
   )
 }
 
-// Rings + mood chip for the signed-in user (reads cookies, so it sits in <Suspense>)
+// Total fuel gauge + mood chip for the signed-in user (reads cookies, so it sits in <Suspense>)
 async function LockedStatus() {
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getClaims()
@@ -37,7 +37,7 @@ async function LockedStatus() {
   const s = profile ? summary(profile, transactions) : null
   return (
     <div className='flex flex-col items-center gap-6'>
-      <Rings progress={s?.progress ?? [0, 0, 0]} size={170} />
+      <Gauge fill={s?.gauges.total.fill ?? 0} pace={s?.gauges.pace} size={190} label='Fuel left this week' />
       {s && <MoodChip mood={s.mood} label={`${s.mood} today`} />}
     </div>
   )

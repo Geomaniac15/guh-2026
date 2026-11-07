@@ -1,7 +1,7 @@
 'use client'
 
 import type { AddResult } from '@/app/dashboard/actions'
-import Timeline from '@/components/Timeline'
+import RangeCard from '@/components/RangeCard'
 import { CATEGORY_LABELS, gbp } from '@/lib/runway'
 
 // category/ai are set for bank feed transactions
@@ -61,7 +61,7 @@ export default function AddResultView({ result, onDone }: Props) {
         </div>
       </div>
 
-      <Timeline runway={after.runway} untilLoan={untilLoan} now={now} />
+      <RangeCard runway={after.runway} untilLoan={untilLoan} now={now} />
 
       <div className={`rounded-2xl p-4 text-sm ${up ? 'bg-lime/10 text-lime' : 'bg-orange/10 text-orange'}`}>
         {Math.abs(after.allowance - before.allowance) < 0.005

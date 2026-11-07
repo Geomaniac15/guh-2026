@@ -2,24 +2,13 @@
 
 import { refresh } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { ringFromChoice, type Ring } from '@/lib/runway'
+import { CATEGORY_LIMITS } from '@/lib/runway'
 
-type Input = {
-  mode: string
-  ringIds: string[]
-  split: { needs: number; wants: number; savings: number }
-}
-
-// Saves ring mode, custom rings (rebuilt from ids on the server) and the Basic split
-export async function saveRings({ mode, ringIds, split }: Input) {
-  if (!['runway', 'basic', 'custom'].includes(mode)) return { error: 'Unknown ring mode' }
-
-  const pcts = [split.needs, split.wants, split.savings]
-  if (!pcts.every((p) => Number.isInteger(p) && p >= 0 && p <= 100) || pcts[0] + pcts[1] + pcts[2] !== 100) {
-    return { error: 'The split must add up to 100%' }
-  }
-  const rings = ringIds.map(ringFromChoice)
-  if (rings.length !== 3 || rings.some((r) => !r)) return { error: 'Pick three rings' }
+// Saves which category the 4th gauge tracks and its weekly limit
+export async function saveGauge(category: string, limit: number) {
+  if (!Object.hasOwn(CATEGORY_LIMITS, category)) return { error: 'Pick a category' }
+  limit = Math.round(Number(limit) * 100) / 100
+  if (!Number.isFinite(limit) || limit < 1 || limit > 1000) return { error: 'Set a weekly limit between £1 and £1,000' }
 
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getClaims()
@@ -27,13 +16,7 @@ export async function saveRings({ mode, ringIds, split }: Input) {
 
   const { error } = await supabase
     .from('profiles')
-    .update({
-      ring_mode: mode,
-      rings: rings as Ring[],
-      needs_pct: split.needs,
-      wants_pct: split.wants,
-      savings_pct: split.savings,
-    })
+    .update({ gauge_category: category, gauge_limit: limit })
     .eq('user_id', auth.claims.sub)
   if (error) return { error: error.message }
   refresh()

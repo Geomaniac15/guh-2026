@@ -82,6 +82,8 @@ export async function POST() {
     budget_ref: null,
     last_budget_date: null,
     bank_connected_at: new Date().toISOString(),
+    gauge_category: 'going_out',
+    gauge_limit: 25,
     next_loan_date: '2027-01-10',
     weekly_savings_target: 5,
     ring_mode: 'runway',

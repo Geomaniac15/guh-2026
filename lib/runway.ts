@@ -6,8 +6,8 @@ export type Profile = {
   essentials_remaining: number
   next_loan_date: string | null
   weekly_savings_target: number
-  ring_mode: 'runway' | 'basic' | 'custom'
-  rings: Ring[] | null
+  gauge_category?: string | null // the user-picked 4th gauge
+  gauge_limit?: number | null // its weekly limit (£)
   needs_pct: number
   wants_pct: number
   savings_pct: number
@@ -41,46 +41,9 @@ export type Transaction = {
   created_at: string
 }
 
-export type Ring = {
-  id?: string
-  kind: 'allowance' | 'savings' | 'loan' | 'needs' | 'wants' | 'category'
-  label: string
-  target?: number
-  period: 'day' | 'week' | 'term'
-  category?: string
-}
-
 export type Mood = 'Comfortable' | 'Careful' | 'Tight'
 
 export type RunwayData = { profile: Profile; transactions: Transaction[]; now?: Date }
-
-// Every ring a user can pick for a custom slot, grouped as in the picker
-export const RING_CHOICES: (Ring & { id: string; group: 'Runway' | 'Basic' | 'Categories'; description: string })[] = [
-  { id: 'allowance', group: 'Runway', kind: 'allowance', label: "Today's allowance", period: 'day', description: "Stay within today's amount" },
-  { id: 'savings', group: 'Runway', kind: 'savings', label: 'Savings', period: 'week', description: 'A small weekly target, e.g. £5' },
-  { id: 'loan', group: 'Runway', kind: 'loan', label: 'Make it to the loan', period: 'term', description: 'Runway reaches your next instalment' },
-  { id: 'needs', group: 'Basic', kind: 'needs', label: 'Needs', period: 'term', description: 'Food, bills, transport, course' },
-  { id: 'wants', group: 'Basic', kind: 'wants', label: 'Wants', period: 'term', description: 'Everything else' },
-  { id: 'cat_going_out', group: 'Categories', kind: 'category', category: 'going_out', target: 25, label: 'Going out', period: 'week', description: 'Weekly limit' },
-  { id: 'cat_food', group: 'Categories', kind: 'category', category: 'food', target: 40, label: 'Food shop', period: 'week', description: 'Weekly limit' },
-  { id: 'cat_takeaways', group: 'Categories', kind: 'category', category: 'takeaways', target: 15, label: 'Takeaways', period: 'week', description: 'Weekly limit' },
-  { id: 'cat_course', group: 'Categories', kind: 'category', category: 'course', target: 10, label: 'Course costs', period: 'week', description: 'Weekly limit' },
-]
-
-// The stored ring for a picker id (drops the picker-only group/description)
-export function ringFromChoice(id: string): Ring | null {
-  const c = RING_CHOICES.find((r) => r.id === id)
-  return c ? { id: c.id, kind: c.kind, label: c.label, period: c.period, target: c.target, category: c.category } : null
-}
-const choice = (id: string) => ringFromChoice(id)!
-
-export const RUNWAY_RINGS: Ring[] = ['allowance', 'savings', 'loan'].map(choice)
-
-export const BASIC_RINGS: Ring[] = [
-  choice('needs'),
-  choice('wants'),
-  { id: 'savings_term', kind: 'savings', label: 'Savings', period: 'term' },
-]
 
 export const CATEGORY_GROUP: Record<string, 'needs' | 'wants'> = {
   food: 'needs',
@@ -104,6 +67,18 @@ export const CATEGORY_LABELS: Record<string, string> = {
   other: 'Other',
 }
 
+// Default weekly limit for each category's gauge
+export const CATEGORY_LIMITS: Record<string, number> = {
+  food: 40,
+  transport: 15,
+  course: 10,
+  bills: 30,
+  going_out: 25,
+  takeaways: 15,
+  shopping: 20,
+  other: 15,
+}
+
 const DAY = 24 * 60 * 60 * 1000
 const WEEK = 7 * DAY
 const HALF_LIFE_WEEKS = 3
@@ -115,9 +90,6 @@ const round1 = (n: number) => Math.round(n * 10) / 10
 const sum = (txs: Transaction[]) => txs.reduce((t, x) => t + Number(x.amount), 0)
 const time = (t: Transaction) => new Date(t.created_at).getTime()
 const startOfDay = (now: Date) => new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-
-const inLastDays = (txs: Transaction[], days: number, now: Date) =>
-  txs.filter((t) => now.getTime() - time(t) < days * DAY)
 
 const spends = (txs: Transaction[]) => txs.filter((t) => t.kind === 'spend')
 const discretionary = (txs: Transaction[]) => spends(txs).filter((t) => CATEGORY_GROUP[t.category ?? ''] !== 'needs')
@@ -231,38 +203,56 @@ export function mood({ profile, transactions, now = new Date() }: RunwayData): M
   return 'Careful'
 }
 
-export function ringsFor(profile: Profile): Ring[] {
-  if (profile.ring_mode === 'basic') return BASIC_RINGS
-  if (profile.ring_mode === 'custom' && profile.rings?.length === 3) return profile.rings
-  return RUNWAY_RINGS
+// Monday 00:00 of this week (server timezone)
+export function weekStart(now = new Date()) {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return d.getTime() - ((d.getDay() + 6) % 7) * DAY
 }
 
-export function ringProgress(ring: Ring, { profile, transactions, now = new Date() }: RunwayData) {
-  const week = inLastDays(transactions, 7, now)
-  const pot = Number(profile.pot)
-  switch (ring.kind) {
-    case 'allowance':
-      return clamp(1 - spentToday(transactions, now) / dailyAllowance(profile, transactions, now))
-    case 'loan':
-      return clamp(runwayDays(profile, transactions, now) / Math.max(1, daysUntilLoan(profile, now)))
-    case 'savings': {
-      const saved = (txs: Transaction[]) => sum(txs.filter((t) => t.kind === 'saving'))
-      // Basic mode: share of the term's savings split reached
-      if (ring.period === 'term') return clamp(saved(transactions) / ((pot * profile.savings_pct) / 100))
-      // Budget left unallocated each week counts as auto-saved
-      const auto = budgetBreakdown(profile, transactions, now).autoSaved
-      return clamp((saved(week) + auto) / (ring.target ?? Number(profile.weekly_savings_target)))
-    }
-    case 'needs':
-    case 'wants': {
-      const used = sum(spends(transactions).filter((t) => CATEGORY_GROUP[t.category ?? ''] === ring.kind))
-      const pct = ring.kind === 'needs' ? profile.needs_pct : profile.wants_pct
-      return clamp(used / ((pot * pct) / 100))
-    }
-    case 'category':
-      return clamp(sum(spends(week).filter((t) => t.category === ring.category)) / (ring.target ?? 25))
+export type GaugeReading = {
+  fill: number // fuel left this week, 1 = full (F), 0 = empty (E)
+  pace: number // where the needle should be today if spending evenly (the triangle)
+  status: 'On track' | 'Too fast'
+  spent: number
+  budget: number
+}
+
+// Weekly fuel gauges. Needs budget = essentials at the start of the week ÷ weeks to loan;
+// Wants budget = this week's budget from the engine; Total = both in one tank.
+export function gauges(profile: Profile, transactions: Transaction[], now = new Date()) {
+  const b = budgetBreakdown(profile, transactions, now)
+  const start = weekStart(now)
+  const pace = clamp(1 - (now.getTime() - start) / WEEK)
+  const thisWeek = transactions.filter((t) => time(t) >= start && time(t) <= now.getTime())
+  const weekSpends = spends(thisWeek)
+  const isNeeds = (t: Transaction) => CATEGORY_GROUP[t.category ?? ''] === 'needs'
+
+  const reading = (spent: number, budget: number): GaugeReading => {
+    const fill = budget > 0 ? clamp(1 - spent / budget) : spent > 0 ? 0 : 1
+    return { fill, pace, status: fill >= pace - 0.05 ? 'On track' : 'Too fast', spent, budget }
+  }
+
+  const needsSpent = sum(weekSpends.filter(isNeeds))
+  const wantsSpent = sum(weekSpends.filter((t) => !isNeeds(t)))
+  const needsBudget = (b.essentials + needsSpent) / b.weeks
+  const wantsBudget = b.weeklyBudget
+
+  const category = profile.gauge_category && CATEGORY_LIMITS[profile.gauge_category] ? profile.gauge_category : 'going_out'
+  const limit = Number(profile.gauge_limit) > 0 ? Number(profile.gauge_limit) : CATEGORY_LIMITS[category]
+  const target = Number(profile.weekly_savings_target) || 5
+  const saved = sum(thisWeek.filter((t) => t.kind === 'saving')) + b.autoSaved // underspend counts as saved
+
+  return {
+    pace,
+    needs: reading(needsSpent, needsBudget),
+    wants: reading(wantsSpent, wantsBudget),
+    total: reading(needsSpent + wantsSpent, needsBudget + wantsBudget),
+    category: { ...reading(sum(weekSpends.filter((t) => t.category === category)), limit), category, label: CATEGORY_LABELS[category], limit },
+    savings: { fill: clamp(saved / target), target },
   }
 }
+
+export type Gauges = ReturnType<typeof gauges>
 
 // Everything a screen needs, computed once
 export function summary(profile: Profile, transactions: Transaction[], now = new Date()) {
@@ -278,8 +268,7 @@ export function summary(profile: Profile, transactions: Transaction[], now = new
     spentToday: today,
     leftToday: Math.max(0, allowance - today),
     mood: mood(data),
-    rings: ringsFor(profile),
-    progress: ringsFor(profile).map((r) => ringProgress(r, data)),
+    gauges: gauges(profile, transactions, now),
     budget,
   }
 }

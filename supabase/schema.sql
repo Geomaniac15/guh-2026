@@ -94,3 +94,7 @@ create policy "own rules select" on user_merchant_rules for select using (user_i
 create policy "own rules insert" on user_merchant_rules for insert with check (user_id = auth.uid());
 create policy "own rules update" on user_merchant_rules for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own rules delete" on user_merchant_rules for delete using (user_id = auth.uid());
+
+-- Migration (7 Nov): fuel gauges replace rings. The user-picked 4th gauge. Run once.
+alter table profiles add column if not exists gauge_category text default 'going_out';
+alter table profiles add column if not exists gauge_limit numeric default 25;

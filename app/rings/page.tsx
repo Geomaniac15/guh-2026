@@ -2,17 +2,17 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { loadRunway } from '@/lib/data'
-import RingsEditor from '@/components/RingsEditor'
+import GaugesEditor from '@/components/GaugesEditor'
 import LoadDemoButton from '@/components/LoadDemoButton'
 
-export default function RingsPage() {
+export default function GaugesPage() {
   return (
     <main className='mx-auto flex page-min-h w-full max-w-[420px] flex-col gap-5 px-5 py-6'>
       <header>
         <p className='text-sm text-muted'>Settings</p>
-        <h1 className='font-display text-4xl font-bold'>Your rings</h1>
+        <h1 className='font-display text-4xl font-bold'>Your gauges</h1>
       </header>
-      <Suspense fallback={<RingsSkeleton />}>
+      <Suspense fallback={<GaugesSkeleton />}>
         <Editor />
       </Suspense>
     </main>
@@ -26,7 +26,7 @@ async function Editor() {
   if (!auth?.claims) redirect('/login')
 
   const { profile, transactions, error } = await loadRunway(supabase, auth.claims.sub)
-  if (error) return <p className='rounded-2xl bg-card p-5 text-pink'>Could not load your rings: {error.message}</p>
+  if (error) return <p className='rounded-2xl bg-card p-5 text-pink'>Could not load your gauges: {error.message}</p>
   if (!profile) {
     return (
       <div className='flex flex-1 flex-col items-center justify-center gap-4 text-center'>
@@ -35,14 +35,14 @@ async function Editor() {
       </div>
     )
   }
-  return <RingsEditor profile={profile} transactions={transactions} now={new Date().getTime()} />
+  return <GaugesEditor profile={profile} transactions={transactions} now={new Date().getTime()} />
 }
 
-function RingsSkeleton() {
+function GaugesSkeleton() {
   return (
     <div className='flex animate-pulse flex-col gap-5'>
       <div className='h-12 rounded-2xl bg-card' />
-      <div className='mx-auto size-[170px] rounded-full bg-card' />
+      <div className='h-40 rounded-2xl bg-card' />
       <div className='h-20 rounded-2xl bg-card' />
       <div className='h-20 rounded-2xl bg-card' />
       <div className='h-20 rounded-2xl bg-card' />

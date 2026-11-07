@@ -4,9 +4,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { CATEGORY_LABELS, gbp, summary, transactionImpact, type Profile } from '@/lib/runway'
 import { loadRunway } from '@/lib/data'
-import Rings from '@/components/Rings'
+import GaugeCluster from '@/components/GaugeCluster'
 import MoodChip from '@/components/MoodChip'
-import Timeline from '@/components/Timeline'
+import RangeCard from '@/components/RangeCard'
 import LoadDemoButton from '@/components/LoadDemoButton'
 import Flame from '@/components/Flame'
 import BudgetCard from '@/components/BudgetCard'
@@ -73,18 +73,11 @@ async function Today() {
         </div>
       </header>
 
-      <section className='flex items-center gap-5'>
-        <Link href='/rings' aria-label='Customise your rings'>
-          <Rings progress={s.progress} size={150} />
-        </Link>
-        <div>
-          <p className='font-display text-7xl font-bold leading-none'>{Math.round(s.runway)}</p>
-          <p className='mt-1 font-medium'>days of runway</p>
-          <p className='text-sm text-muted'>Next loan in {s.untilLoan} days</p>
-        </div>
-      </section>
+      <Link href='/rings' aria-label='Your gauges: tap to customise' className='block rounded-2xl bg-card px-4 pb-4 pt-5'>
+        <GaugeCluster g={s.gauges} />
+      </Link>
 
-      <Timeline runway={s.runway} untilLoan={s.untilLoan} now={now.getTime()} />
+      <RangeCard runway={s.runway} untilLoan={s.untilLoan} now={now.getTime()} />
 
       <div className='grid grid-cols-2 gap-3'>
         <Stat label="Today's allowance" value={gbp(s.allowance)} />

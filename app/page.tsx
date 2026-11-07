@@ -1,12 +1,16 @@
 import Link from 'next/link'
-import Rings from '@/components/Rings'
+import Gauge from '@/components/Gauge'
 
 // Landing page
 export default function Home() {
   return (
     <main className='mx-auto flex page-min-h w-full max-w-[420px] flex-col px-5 pb-10 pt-12'>
       <div className='flex flex-1 flex-col items-center justify-center gap-8 text-center'>
-        <Rings progress={[0.78, 0.9, 0.62]} size={200} />
+        <div className='flex items-end' aria-hidden>
+          <Gauge fill={0.6} pace={0.55} colour='#4DA3FF' size={92} labels={false} />
+          <Gauge fill={0.54} pace={0.55} size={150} />
+          <Gauge fill={0.3} pace={0.55} colour='#FF8A3D' size={92} labels={false} />
+        </div>
         <div className='space-y-4'>
           <h1 className='font-display text-5xl font-bold leading-[1.05] tracking-tight'>
             Your loan, counted in days
